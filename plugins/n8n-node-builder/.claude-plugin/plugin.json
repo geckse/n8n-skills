@@ -1,7 +1,8 @@
 {
-  "name": "n8n-skills",
-  "version": "1.0.0",
+  "name": "n8n-node-builder",
   "description": "Agent skills for building custom n8n community nodes — scaffolding, implementation, testing, and publishing using official best practices.",
-  "author": "geckse",
-  "homepage": "https://github.com/geckse/n8n-skills"
+  "version": "1.0.0",
+  "author": {
+    "name": "geckse"
+  }
 }

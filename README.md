@@ -2,11 +2,11 @@
 
 Agent Skills for building custom [n8n](https://n8n.io) community nodes.
 
-## Skills
+## Plugins
 
-| Skill | Description |
-|-------|-------------|
-| [building-n8n-nodes](skills/building-n8n-nodes/) | Scaffolds, implements, tests, and publishes custom n8n nodes using official best practices. Covers declarative and programmatic styles, all credential/auth patterns, trigger nodes, and verification requirements. |
+| Plugin | Description |
+|--------|-------------|
+| [n8n-node-builder](plugins/n8n-node-builder/) | Scaffolds, implements, tests, and publishes custom n8n nodes using official best practices. Covers declarative and programmatic styles, all credential/auth patterns, trigger nodes, and verification requirements. |
 
 ## Install via Claude Code Plugin Marketplace
 
@@ -14,15 +14,15 @@ Add this marketplace and install the plugin:
 
 ```
 /plugin marketplace add geckse/n8n-skills
-/plugin install n8n-skills@n8n-skills
+/plugin install n8n-node-builder@n8n-skills
 ```
 
 Once installed, Claude will automatically activate the skill when you ask about building n8n nodes.
 
 ## Manual Usage
 
-Copy or symlink a skill directory from `skills/` into your agent's skills folder. The agent will discover it automatically via the `SKILL.md` frontmatter.
+Copy or symlink a skill directory from `plugins/n8n-node-builder/skills/` into your agent's skills folder. The agent will discover it automatically via the `SKILL.md` frontmatter.
 
 ## Format
 
-Skills follow the [Agent Skills](https://agentskills.io) open specification and are packaged as a [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code).
+Skills follow the [Agent Skills](https://agentskills.io) open specification and are packaged as a [Claude Code plugin](https://code.claude.com/docs/en/plugins).
