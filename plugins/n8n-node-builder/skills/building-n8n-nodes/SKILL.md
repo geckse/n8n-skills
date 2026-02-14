@@ -15,7 +15,7 @@ This skill uses progressive disclosure. The SKILL.md covers the full workflow an
 - `references/programmatic-node.md` — Full programmatic node template with execute method, error handling, item linking, and trigger patterns
 - `references/credentials.md` — All credential/auth patterns (API key, Bearer, OAuth2, Basic, Custom, testedBy)
 - `references/publishing.md` — Linting, testing, releasing, and verification checklist
-- `references/common-mistakes.md` — Error catalog with 24 numbered mistake patterns and fixes
+- `references/common-mistakes.md` — Error catalog with 36 numbered mistake patterns and fixes
 
 Read the appropriate reference file before writing any code.
 
@@ -36,14 +36,19 @@ n8n has two node-building styles. Picking the right one up front saves significa
 
 ### Declarative Style (preferred for REST APIs)
 
-Use declarative when the integration is a straightforward REST API wrapper. It's JSON-based, simpler, more future-proof, and faster to get approved for n8n Cloud.
+Use declarative when the integration is a REST API wrapper. It's JSON-based, simpler, more future-proof, and faster to get approved for n8n Cloud.
 
 The declarative style handles data flow through a `routing` key inside the operations object. There's no `execute()` method — n8n constructs HTTP requests from the JSON description automatically.
 
+Declarative nodes support advanced patterns beyond simple routing: declarative dynamic dropdowns via `typeOptions.loadOptions.routing` with `setKeyValue`/`sort` postReceive transforms, dynamic property paths using `$parent`/`$index` expressions for nested body structures, routing on any parameter field (not just operations), `preSend` functions (including factory patterns) to transform request bodies before sending, custom `postReceive` functions to transform responses (including binary file handling with `binaryData` type), custom pagination functions with duplicate detection, three pagination modes (offset, generic token-based, and cursor-based via custom functions), `resourceLocator` parameters for multi-mode entity selection (list/URL/ID), `resourceMapper` for dynamic field mapping UIs, `fixedCollection` for structured filters/sort rules, advanced `displayOptions` with `_cnd` operators (eq, not, gte, lte, startsWith, includes, regex, exists, etc.) and `@version`/`@tool` special keys, `ignoreHttpStatusErrors` for custom error handling in postReceive, conditional transforms with `enabled`/`errorMessage` on all postReceive types, `propertyInDotNotation` control for literal dot keys, dynamic base URLs from credentials, and a `methods` object for `listSearch`, `loadOptions`, and `resourceMapping`. See `references/declarative-node.md` → "Advanced Declarative Patterns" for complete templates and a TypeScript type reference.
+
 **Choose declarative when:**
 - The API is REST-based
-- You don't need to transform response data in complex ways
 - You want a simpler, lower-risk codebase
+- Even if you need custom request/response transformation (use `preSend`/`postReceive` functions)
+- Even if you need file upload/download (use `preSend` with form-data, `postReceive` with binary data)
+- Even if you need dynamic field mapping (use `resourceMapper`)
+- Even if you need custom pagination logic (use custom pagination functions)
 
 ### Programmatic Style (required for advanced use cases)
 
@@ -53,13 +58,11 @@ Use programmatic when you need full control over execution. It requires an `exec
 - Trigger nodes (webhook, polling, or other event-driven)
 - GraphQL APIs
 - Non-REST protocols
-- Nodes that transform incoming data
-- Full versioning (separate version directories)
-- Complex multi-step logic (pagination, chaining calls, conditional branching)
+- Complex multi-step logic that chains multiple sequential API calls where later calls depend on earlier results
 
 ### Quick Decision
 
-Ask: "Is this a simple REST API wrapper with no triggers?" If yes → declarative. Otherwise → programmatic.
+Ask: "Is this a REST API with no triggers and no multi-call chaining?" If yes → declarative (even for complex request/response transformation, pagination, file handling, and field mapping — use `preSend`/`postReceive` functions). Otherwise → programmatic.
 
 ## Step 2: Scaffold with the n8n-node CLI
 
@@ -156,8 +159,20 @@ This is the heart of the node. It exports a class implementing `INodeType` with 
 | `properties` | array | Resource, operation, and field definitions |
 
 **For declarative nodes**, also add:
-- `requestDefaults: { baseURL: 'https://api.example.com', headers: { Accept: 'application/json' } }`
-- Operations use a `routing` key to define HTTP method, URL, query strings, and body
+- `requestDefaults: { baseURL: '...', headers: { Accept: 'application/json' } }` — supports dynamic expressions from credentials (e.g., `'={{ !$credentials.customBaseUrl ? "https://api.example.com/v1" : $credentials.baseUrl }}'`)
+- Operations use a `routing` key to define HTTP method, URL, query strings, and body — use `encodeURIComponent()` for user values in URLs
+- `routing` can be placed on any parameter (not just operations) — fields, fixedCollections, etc.
+- Use `typeOptions.loadOptions.routing` for declarative dynamic dropdowns with `setKeyValue`/`sort` postReceive transforms
+- Use dynamic property paths with `$parent`, `$index` expressions (e.g., `'=attributes.{{$parent.fieldName}}'`, `'=items[{{$index}}].value'`)
+- Operations can use `routing.send.preSend` array for custom request transformation functions
+- Operations can use `routing.output.postReceive` array for custom response transformation (including binary file handling)
+- Operations can use `routing.operations.pagination` for custom pagination functions
+- Use `type: 'resourceLocator'` for multi-mode entity selection (list/URL/ID) with `methods.listSearch`
+- Use `type: 'resourceMapper'` for dynamic field mapping UIs with `methods.resourceMapping`
+- Use `type: 'fixedCollection'` for structured parameter groups (filters, sort rules) with `$index` for array mapping
+- Combine `displayOptions.show` and `displayOptions.hide` for fine-grained field visibility
+- Split operations/fields into separate `*Description.ts` files per resource, spread into the main node
+- Define a `methods` object on the class for `listSearch`, `loadOptions`, and `resourceMapping`
 
 **For programmatic nodes**, also add:
 - An `async execute()` method
@@ -332,6 +347,26 @@ Read `references/publishing.md` for the full publishing and verification checkli
 - Use `$credentials` (plural) in credential expressions — `$credential` (singular) won't resolve
 - Dynamic expressions in routing need the `=` prefix: `'=/path/{{$parameter.id}}'`
 - Declarative nodes cannot have `execute()` — use routing OR execute, not both
+- Use `typeOptions.loadOptions.routing` for declarative dynamic dropdowns — chain `rootProperty` → `setKeyValue` → `sort` postReceive transforms
+- Use dynamic property paths: `$parent.fieldName` for nested objects, `$index` for array indexing in fixedCollections
+- Use `encodeURIComponent()` / `encodeURI()` for user-provided values in routing URLs
+- Place `routing` on any parameter that needs it (fields, fixedCollections), not just on operations
+- Split multi-resource nodes into `*Description.ts` files per resource, spread into properties array
+- Use `preSend` functions for custom request body transformation in declarative nodes — they receive and return `IHttpRequestOptions`
+- Use custom `postReceive` functions for response transformation beyond `rootProperty`/`filter`/`limit`/`set`/`setKeyValue`/`sort`/`binaryData` — they receive `(items, response)` and return `INodeExecutionData[]`
+- All postReceive transforms support optional `enabled` (boolean/expression) and `errorMessage` properties
+- For file downloads in declarative nodes, set `returnFullResponse: true` and `encoding: 'arraybuffer'` on the request, then handle binary conversion in `postReceive`
+- For file uploads in declarative nodes, use `preSend` to build `FormData` from `this.helpers.getBinaryDataBuffer()`
+- Use `ignoreHttpStatusErrors: true` on request when you need custom error handling in postReceive
+- Use `propertyInDotNotation: false` on `routing.send` when property names contain literal dots (default is `true`, which creates nested objects)
+- For generic/token-based pagination, use `type: 'generic'` with `$response.body`/`$request` expressions
+- For cursor-based pagination, create a reusable factory function using `IExecutePaginationFunctions` and `makeRoutingRequest()`
+- Use `_cnd` operators in displayOptions for advanced conditions: `{ _cnd: { gte: 2 } }`, `{ _cnd: { startsWith: 'https' } }`, etc.
+- Use `@version`, `@tool`, `@feature` special keys in displayOptions for version/context-specific fields
+- Use `type: 'resourceLocator'` for entity selection (provides list, URL, and ID modes) — requires `methods.listSearch` on the node class
+- Use `type: 'resourceMapper'` for dynamic field mapping (Create/Update) — requires `methods.resourceMapping` on the node class
+- Use `type: 'fixedCollection'` with `multipleValues: true` for repeatable structured parameter groups (filters, sort rules)
+- Combine `displayOptions.show` and `displayOptions.hide` for excluding specific parameter values
 - Pass the linter before publishing — see `references/common-mistakes.md` for the full error catalog
 
 ## UX Patterns (Verification Requirements)

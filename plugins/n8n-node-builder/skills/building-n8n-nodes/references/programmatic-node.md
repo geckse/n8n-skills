@@ -13,7 +13,14 @@ Complete template and patterns for building a programmatic-style n8n node.
 7. [Binary Data Handling](#binary-data-handling)
 8. [Trigger Node Template](#trigger-node-template)
 9. [Full Versioning Structure](#full-versioning-structure)
-10. [Complete Working Example](#complete-working-example)
+10. [GenericFunctions.ts Pattern](#genericfunctionsts-pattern)
+11. [Complete `this.*` Methods Reference](#complete-this-methods-reference)
+12. [Complete `this.helpers` Reference](#complete-thishelpers-reference)
+13. [Dynamic Options (loadOptions & listSearch)](#dynamic-options-loadoptions--listsearch)
+14. [Multiple Outputs](#multiple-outputs)
+15. [Execution Control](#execution-control)
+16. [Advanced Binary Data Patterns](#advanced-binary-data-patterns)
+17. [Advanced GenericFunctions Patterns](#advanced-genericfunctions-patterns)
 
 ## Complete Base File Template
 
@@ -1009,21 +1016,793 @@ import { myServiceApiRequest, myServiceApiRequestAllItems } from './GenericFunct
 const response = await myServiceApiRequest.call(this, 'POST', '/contacts', body);
 ```
 
-## Key Helpers Reference
+## Complete `this.*` Methods Reference
 
-| Method | Purpose |
-|--------|---------|
-| `this.getInputData()` | Get input items array |
-| `this.getNodeParameter(name, index)` | Read a user-configured parameter |
-| `this.getCredentials('credName')` | Retrieve stored credentials |
-| `this.helpers.returnJsonArray(data)` | Wrap response as `INodeExecutionData[]` |
-| `this.helpers.constructExecutionMetaData(data, { itemData })` | Link output to input items |
-| `this.continueOnFail()` | Check if user enabled "Continue On Fail" |
-| `this.helpers.httpRequest(options)` | Make HTTP request (unauthenticated) |
-| `this.helpers.httpRequestWithAuthentication('credName', options)` | Authenticated HTTP request |
+All methods available on `this` inside `execute()` (from `IExecuteFunctions`):
+
+### Parameter & Input Methods
+
+```typescript
+// Get parameter value (resolves expressions per item). Type-safe overloads exist for string, number, boolean, IDataObject.
+this.getNodeParameter(parameterName: string, itemIndex: number, fallbackValue?: any, options?: IGetNodeParameterOptions): NodeParameterValueType | object;
+
+// IGetNodeParameterOptions:
+// {
+//   ensureType?: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'json';  // Auto-convert
+//   extractValue?: boolean;    // Extract value from resourceLocator
+//   rawExpressions?: boolean;  // Get raw unresolved expressions
+//   skipValidation?: boolean;  // Skip parameter validation
+// }
+
+// Get all input items
+this.getInputData(inputIndex?: number, connectionType?: NodeConnectionType): INodeExecutionData[];
+
+// Get input from AI/LangChain connections
+this.getInputConnectionData(connectionType: AINodeConnectionType, itemIndex: number, inputIndex?: number): Promise<unknown>;
+
+// Track input data lineage
+this.getInputSourceData(inputIndex?: number, connectionType?: NodeConnectionType): ISourceData;
+```
+
+### Node & Workflow Information
+
+```typescript
+this.getNode(): INode;                          // { id, name, typeVersion, type, position, disabled?, parameters, credentials? }
+this.getWorkflow(): IWorkflowMetadata;           // { id?, name?, active }
+this.getWorkflowSettings(): IWorkflowSettings;   // { timezone?, errorWorkflow?, saveDataErrorExecution?, ... }
+this.getTimezone(): string;
+this.getRestApiUrl(): string;
+this.getInstanceBaseUrl(): string;
+this.getInstanceId(): string;
+this.getExecutionId(): string;
+```
+
+### Credentials
+
+```typescript
+// Get decrypted credentials — supports generics for type safety
+this.getCredentials<T extends object = ICredentialDataDecryptedObject>(type: string, itemIndex?: number): Promise<T>;
+
+// Example:
+const creds = await this.getCredentials<{ apiKey: string; baseUrl: string }>('myServiceApi');
+```
+
+### Execution State & Control
+
+```typescript
+this.continueOnFail(): boolean;                   // Check if user enabled "Continue On Fail"
+this.getMode(): WorkflowExecuteMode;              // 'manual' | 'trigger' | 'webhook' | 'cli' | 'retry' | 'internal' | 'error' | 'integrated' | 'evaluation' | 'chat'
+this.evaluateExpression(expression: string, itemIndex: number): NodeParameterValueType;  // Evaluate n8n expressions dynamically
+this.getWorkflowDataProxy(itemIndex: number): IWorkflowDataProxyData;  // Access $json, $items(), $node, $parameter, $env, etc.
+this.getExecuteData(): IExecuteData;
+this.getExecutionCancelSignal(): AbortSignal | undefined;
+this.onExecutionCancellation(handler: () => unknown): void;
+this.isToolExecution(): boolean;                   // True when running as AI agent tool
+this.isStreaming(): boolean;
+```
+
+### Persistent Storage
+
+```typescript
+// Persist data across executions (survives restarts). Used by triggers for webhook IDs, poll cursors, etc.
+this.getWorkflowStaticData(type: 'node' | 'global'): IDataObject;
+//   'node'   → scoped to this node instance
+//   'global' → shared across all nodes in the workflow
+
+// Share data between nodes within a single execution (in-memory only)
+this.getContext(type: 'flow' | 'node'): IContextObject;
+//   'flow'  → shared across all nodes in this execution
+//   'node'  → private to this node in this execution
+```
+
+### Communication & Output
+
+```typescript
+this.sendMessageToUI(message: any): void;          // Send status updates to the n8n UI
+this.sendResponse(response: IExecuteResponsePromiseData): void;
+this.addExecutionHints(...hints: NodeExecutionHint[]): void;  // Add warnings/info shown after execution
+
+// Node graph navigation
+this.getChildNodes(nodeName: string, options?: { includeNodeParameters?: boolean }): NodeTypeAndVersion[];
+this.getParentNodes(nodeName: string, options?: { includeNodeParameters?: boolean; connectionType?: NodeConnectionType; depth?: number }): NodeTypeAndVersion[];
+this.getNodeInputs(): INodeInputConfiguration[];
+this.getNodeOutputs(): INodeOutputConfiguration[];
+```
+
+### Sub-Workflow Execution
+
+```typescript
+this.executeWorkflow(
+  workflowInfo: { id?: string; code?: IWorkflowBase },
+  inputData?: INodeExecutionData[],
+  parentCallbackManager?: CallbackManager,
+  options?: {
+    doNotWaitToFinish?: boolean;
+    parentExecution?: RelatedExecution;
+    executionMode?: WorkflowExecuteMode;
+  },
+): Promise<ExecuteWorkflowData>;
+
+this.putExecutionToWait(waitTill: Date): Promise<void>;  // Pause execution until a date
+```
+
+### Logging
+
+```typescript
+this.logger: Logger;  // Available for logging: this.logger.info(), this.logger.warn(), this.logger.error()
+```
 
 > **Deprecation note:** `this.helpers.requestWithAuthentication` and `IRequestOptions` are **deprecated**. Always use `httpRequestWithAuthentication` with `IHttpRequestOptions`. The new interface uses `url` (not `uri`) and defaults to JSON parsing (no `json: true` needed).
 
-## Complete Working Example
+---
 
-See the template at the top of this document for a complete, copy-paste-ready programmatic node. It demonstrates all the key patterns: resource/operation routing with `returnAll`/`limit`, item processing, error handling with `continueOnFail`, `constructExecutionMetaData` for proper item linking, and the correct return format.
+## Complete `this.helpers` Reference
+
+The `helpers` object combines multiple interfaces:
+
+```typescript
+this.helpers: RequestHelperFunctions & BaseHelperFunctions & BinaryHelperFunctions &
+              DeduplicationHelperFunctions & FileSystemHelperFunctions &
+              SSHTunnelFunctions & DataTableProxyFunctions & { /* additional */ }
+```
+
+### Request Helpers
+
+```typescript
+// PRIMARY — use these for all HTTP requests
+this.helpers.httpRequest(requestOptions: IHttpRequestOptions): Promise<any>;
+this.helpers.httpRequestWithAuthentication(
+  credentialsType: string,
+  requestOptions: IHttpRequestOptions,
+  additionalCredentialOptions?: IAdditionalCredentialOptions,
+): Promise<any>;
+
+// Paginated requests (declarative-style pagination)
+this.helpers.requestWithAuthenticationPaginated(
+  requestOptions: IRequestOptions,
+  itemIndex: number,
+  paginationOptions: PaginationOptions,
+  credentialsType?: string,
+): Promise<any[]>;
+
+// DEPRECATED — avoid in new code
+this.helpers.request(uriOrObject: string | IRequestOptions, options?: IRequestOptions): Promise<any>;
+this.helpers.requestWithAuthentication(credentialsType: string, requestOptions: IRequestOptions, ...): Promise<any>;
+this.helpers.requestOAuth1(credentialsType: string, requestOptions: IRequestOptions): Promise<any>;
+this.helpers.requestOAuth2(credentialsType: string, requestOptions: IRequestOptions, oAuth2Options?: IOAuth2Options): Promise<any>;
+```
+
+### Data Helpers
+
+```typescript
+// Wrap raw JSON as INodeExecutionData[] (handles both single object and arrays)
+this.helpers.returnJsonArray(jsonData: IDataObject | IDataObject[]): INodeExecutionData[];
+
+// Attach pairedItem metadata to output items (preferred over manual pairedItem)
+this.helpers.constructExecutionMetaData(
+  inputData: INodeExecutionData[],
+  options: { itemData: IPairedItemData | IPairedItemData[] },
+): NodeExecutionWithMetadata[];
+
+// Normalize inconsistent item formats (auto-wraps in { json: ... } if needed)
+this.helpers.normalizeItems(items: INodeExecutionData | INodeExecutionData[]): INodeExecutionData[];
+
+// Copy specific properties from input items
+this.helpers.copyInputItems(items: INodeExecutionData[], properties: string[]): IDataObject[];
+
+// Create a deferred promise
+this.helpers.createDeferredPromise<T = void>(): IDeferredPromise<T>;
+```
+
+### Binary Data Helpers
+
+```typescript
+// Convert Buffer/Stream to n8n binary format (auto-detects MIME type and extension)
+this.helpers.prepareBinaryData(binaryData: Buffer | Readable, filePath?: string, mimeType?: string): Promise<IBinaryData>;
+
+// Store binary data buffer
+this.helpers.setBinaryDataBuffer(data: IBinaryData, binaryData: Buffer): Promise<IBinaryData>;
+
+// Get binary data as Buffer from an input item
+this.helpers.getBinaryDataBuffer(itemIndex: number, propertyName: string): Promise<Buffer>;
+
+// Assert binary data exists on an input item (throws helpful error if not found)
+this.helpers.assertBinaryData(itemIndex: number, propertyName: string): IBinaryData;
+
+// Convert Buffer/Stream to Buffer or String
+this.helpers.binaryToBuffer(body: Buffer | Readable): Promise<Buffer>;
+this.helpers.binaryToString(body: Buffer | Readable, encoding?: BufferEncoding): Promise<string>;
+
+// Detect encoding of a binary buffer
+this.helpers.detectBinaryEncoding(buffer: Buffer): string;
+
+// Streaming access for large files
+this.helpers.getBinaryPath(binaryDataId: string): string;
+this.helpers.getBinaryStream(binaryDataId: string, chunkSize?: number): Promise<Readable>;
+this.helpers.getBinaryMetadata(binaryDataId: string): Promise<{ fileName?: string; mimeType?: string; fileSize: number }>;
+
+// Create a signed URL for binary data
+this.helpers.createBinarySignedUrl(binaryData: IBinaryData, expiresIn?: string): string;
+```
+
+**IBinaryData type:**
+```typescript
+interface IBinaryData {
+  data: string;                    // Base64-encoded content (or empty if stored externally)
+  mimeType: string;
+  fileType?: 'text' | 'json' | 'image' | 'audio' | 'video' | 'pdf' | 'html';
+  fileName?: string;
+  directory?: string;
+  fileExtension?: string;
+  fileSize?: string;               // Human-readable
+  bytes?: number;
+  id?: string;                     // Present when stored in external binary storage
+}
+```
+
+### FileSystem Helpers
+
+```typescript
+// Resolve and validate a file path (MUST call before any file operation)
+this.helpers.resolvePath(path: PathLike): Promise<ResolvedFilePath>;
+
+// Check if a path is blocked by security settings
+this.helpers.isFilePathBlocked(filePath: ResolvedFilePath): boolean;
+
+// Create a readable stream for a file
+this.helpers.createReadStream(filePath: ResolvedFilePath): Promise<Readable>;
+
+// Get the node's storage directory
+this.helpers.getStoragePath(): string;
+
+// Write content to a file
+this.helpers.writeContentToFile(path: ResolvedFilePath, content: string | Buffer | Readable, flag?: number): Promise<void>;
+```
+
+**Usage pattern:**
+```typescript
+// Always resolve path before any file operation
+const resolvedPath = await this.helpers.resolvePath('/path/to/file.txt');
+if (!this.helpers.isFilePathBlocked(resolvedPath)) {
+  const stream = await this.helpers.createReadStream(resolvedPath);
+  // ...
+}
+```
+
+### Deduplication Helpers
+
+Track processed items across executions to prevent duplicates (useful in trigger/poll nodes):
+
+```typescript
+// Check which items are new and record them
+this.helpers.checkProcessedAndRecord(
+  items: (string | number)[],           // Item identifiers
+  scope: 'node' | 'workflow',
+  options: { mode: 'entries' | 'latestIncrementalKey' | 'latestDate'; maxEntries?: number },
+): Promise<IDeduplicationOutput>;       // { new: [...], processed: [...] }
+
+// Same but for full IDataObject items using a specific property
+this.helpers.checkProcessedItemsAndRecord(
+  propertyName: string,
+  items: IDataObject[],
+  scope: 'node' | 'workflow',
+  options: ICheckProcessedOptions,
+): Promise<IDeduplicationOutputItems>;
+
+// Remove items from the processed list
+this.helpers.removeProcessed(items: (string | number)[], scope: 'node' | 'workflow', options: ICheckProcessedOptions): Promise<void>;
+
+// Clear all tracked items
+this.helpers.clearAllProcessedItems(scope: 'node' | 'workflow', options: ICheckProcessedOptions): Promise<void>;
+
+// Count tracked items
+this.helpers.getProcessedDataCount(scope: 'node' | 'workflow', options: ICheckProcessedOptions): Promise<number>;
+```
+
+### SSH Tunnel Helpers
+
+```typescript
+this.helpers.getSSHClient(credentials: SSHCredentials, abortController?: AbortController): Promise<SSHClient>;
+this.helpers.updateLastUsed(client: SSHClient): void;
+```
+
+### nodeHelpers
+
+```typescript
+// Copy a file on disk into n8n binary data format
+this.nodeHelpers.copyBinaryFile(filePath: string, fileName: string, mimeType?: string): Promise<IBinaryData>;
+```
+
+---
+
+## Dynamic Options (loadOptions & listSearch)
+
+Populate dropdown options dynamically by fetching from an API. Define a `methods` property on the node class:
+
+```typescript
+export class MyService implements INodeType {
+  description: INodeTypeDescription = { /* ... */ };
+
+  methods = {
+    loadOptions: {
+      // Function name matches the property's `typeOptions.loadOptionsMethod`
+      async getUsers(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const response = await myServiceApiRequest.call(this, 'GET', '/users');
+        return (response.users as IDataObject[]).map((user) => ({
+          name: user.name as string,
+          value: user.id as string,
+        }));
+      },
+
+      async getProjects(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const response = await myServiceApiRequest.call(this, 'GET', '/projects');
+        return (response.projects as IDataObject[])
+          .map((p) => ({ name: p.title as string, value: p.id as string }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      },
+    },
+
+    // Searchable dropdowns with pagination
+    listSearch: {
+      async searchContacts(
+        this: ILoadOptionsFunctions,
+        filter?: string,
+        paginationToken?: string,
+      ): Promise<INodeListSearchResult> {
+        const qs: IDataObject = { limit: 20 };
+        if (filter) qs.search = filter;
+        if (paginationToken) qs.cursor = paginationToken;
+
+        const response = await myServiceApiRequest.call(this, 'GET', '/contacts', {}, qs);
+        return {
+          results: (response.data as IDataObject[]).map((c) => ({
+            name: c.name as string,
+            value: c.id as string,
+            url: c.url as string,       // Optional: shown as link in UI
+          })),
+          paginationToken: response.next_cursor || undefined,
+        };
+      },
+    },
+
+    // Resource mapping for dynamic field schemas
+    resourceMapping: {
+      async getColumns(this: ILoadOptionsFunctions): Promise<ResourceMapperFields> {
+        const tableId = this.getNodeParameter('tableId') as string;
+        const response = await myServiceApiRequest.call(this, 'GET', `/tables/${tableId}/columns`);
+        return {
+          fields: (response.columns as IDataObject[]).map((col) => ({
+            id: col.id as string,
+            displayName: col.name as string,
+            required: col.required as boolean,
+            type: col.type as string,
+            defaultMatch: col.isPrimary as boolean,
+          })),
+        };
+      },
+    },
+  };
+
+  async execute(this: IExecuteFunctions) { /* ... */ }
+}
+```
+
+**Wire properties to loadOptions:**
+
+```typescript
+{
+  displayName: 'User',
+  name: 'userId',
+  type: 'options',
+  typeOptions: {
+    loadOptionsMethod: 'getUsers',     // Must match the method name above
+  },
+  default: '',
+}
+
+// For listSearch:
+{
+  displayName: 'Contact',
+  name: 'contactId',
+  type: 'resourceLocator',
+  default: { mode: 'list', value: '' },
+  modes: [
+    {
+      displayName: 'From List',
+      name: 'list',
+      type: 'list',
+      typeOptions: {
+        searchListMethod: 'searchContacts',
+        searchable: true,
+      },
+    },
+    {
+      displayName: 'By ID',
+      name: 'id',
+      type: 'string',
+    },
+  ],
+}
+```
+
+**`ILoadOptionsFunctions` extra methods** (not available in `IExecuteFunctions`):
+```typescript
+// Get the value of the parameter currently being edited in the UI
+this.getCurrentNodeParameter(parameterName: string): NodeParameterValueType | object | undefined;
+
+// Get all current parameter values
+this.getCurrentNodeParameters(): INodeParameters | undefined;
+```
+
+---
+
+## Multiple Outputs
+
+Nodes can route items to different outputs. The return value is `INodeExecutionData[][]` — one array per output:
+
+```typescript
+export class MyRouter implements INodeType {
+  description: INodeTypeDescription = {
+    // ...
+    outputs: [NodeConnectionType.Main, NodeConnectionType.Main],  // Two outputs
+    outputNames: ['Matched', 'Unmatched'],
+    // ...
+  };
+
+  async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+    const items = this.getInputData();
+    const matched: INodeExecutionData[] = [];
+    const unmatched: INodeExecutionData[] = [];
+
+    for (let i = 0; i < items.length; i++) {
+      const value = this.getNodeParameter('field', i) as string;
+      if (value) {
+        matched.push({ json: items[i].json, pairedItem: { item: i } });
+      } else {
+        unmatched.push({ json: items[i].json, pairedItem: { item: i } });
+      }
+    }
+
+    return [matched, unmatched];  // Index 0 → "Matched" output, Index 1 → "Unmatched"
+  }
+}
+```
+
+**Dynamic outputs with expressions** (advanced — used by Switch node):
+```typescript
+outputs: `={{
+  ((parameters) => {
+    const rules = parameters.rules?.rules ?? [];
+    return rules.map(value => ({
+      type: "${NodeConnectionType.Main}",
+      displayName: value.outputKey
+    }));
+  })($parameter)
+}}`,
+```
+
+---
+
+## Execution Control
+
+### Execute Sub-Workflows
+
+```typescript
+// Trigger another workflow by ID
+const result = await this.executeWorkflow(
+  { id: 'workflow-id-here' },
+  [items[i]],                           // Input data to pass
+  undefined,
+  {
+    doNotWaitToFinish: false,            // Set true for fire-and-forget
+    parentExecution: {
+      executionId: this.getExecutionId(),
+      workflowId: this.getWorkflow().id!,
+    },
+  },
+);
+
+// result.data contains the sub-workflow output
+const outputItems = result.data?.[0] ?? [];
+```
+
+### Wait/Resume Pattern
+
+```typescript
+// Pause execution until a specific date (e.g., for approval workflows)
+await this.putExecutionToWait(new Date('2024-12-31'));
+
+// Generate a signed URL that can resume this execution from an external callback
+const resumeUrl = this.getSignedResumeUrl({ action: 'approved' });
+```
+
+### Cancellation Handling
+
+```typescript
+const signal = this.getExecutionCancelSignal();
+
+// Pass to fetch/axios for automatic cancellation
+const response = await fetch(url, { signal });
+
+// Or register cleanup handler
+this.onExecutionCancellation(() => {
+  client.disconnect();
+});
+```
+
+---
+
+## Advanced Binary Data Patterns
+
+### Download File from API → Return as Binary
+
+```typescript
+const response = await this.helpers.httpRequestWithAuthentication.call(
+  this, 'myServiceApi', {
+    method: 'GET',
+    url: `https://api.example.com/files/${fileId}/download`,
+    encoding: 'arraybuffer',       // Critical: get raw binary, not string
+    returnFullResponse: true,
+  },
+);
+
+const binaryData = await this.helpers.prepareBinaryData(
+  Buffer.from(response.body),
+  fileName,                          // Optional: auto-detected if omitted
+  response.headers['content-type'],  // Optional: auto-detected from buffer
+);
+
+returnData.push({
+  json: { fileId, fileName },
+  binary: { data: binaryData },
+  pairedItem: { item: i },
+});
+```
+
+### Upload Binary Data (Multipart Form-Data)
+
+```typescript
+const binaryData = this.helpers.assertBinaryData(i, 'data');
+
+let fileContent: Buffer | Readable;
+if (binaryData.id) {
+  // External storage — use stream for efficiency
+  fileContent = await this.helpers.getBinaryStream(binaryData.id);
+} else {
+  // Inline base64 — convert to buffer
+  fileContent = Buffer.from(binaryData.data, 'base64');
+}
+
+const response = await this.helpers.httpRequestWithAuthentication.call(
+  this, 'myServiceApi', {
+    method: 'POST',
+    url: 'https://api.example.com/files/upload',
+    body: fileContent,
+    headers: {
+      'Content-Type': binaryData.mimeType ?? 'application/octet-stream',
+    },
+  },
+);
+```
+
+### Upload via FormData (Multipart)
+
+```typescript
+import FormData from 'form-data';
+
+const binaryData = this.helpers.assertBinaryData(i, 'data');
+const buffer = await this.helpers.getBinaryDataBuffer(i, 'data');
+
+const formData = new FormData();
+formData.append('file', buffer, {
+  filename: binaryData.fileName,
+  contentType: binaryData.mimeType,
+});
+formData.append('name', fileName);
+
+const response = await this.helpers.httpRequestWithAuthentication.call(
+  this, 'myServiceApi', {
+    method: 'POST',
+    url: 'https://api.example.com/files',
+    body: formData,
+    headers: formData.getHeaders(),
+  },
+);
+```
+
+### Download Attachments into Binary Properties
+
+```typescript
+// When an API returns multiple file URLs in its response
+const attachments = response.attachments as Array<{ url: string; filename: string; mimeType: string }>;
+const binaryObject: IBinaryKeyData = {};
+
+for (const [index, attachment] of attachments.entries()) {
+  const fileBuffer = await this.helpers.httpRequest({
+    method: 'GET',
+    url: attachment.url,
+    encoding: 'arraybuffer',
+  });
+
+  binaryObject[`file_${index}`] = await this.helpers.prepareBinaryData(
+    Buffer.from(fileBuffer),
+    attachment.filename,
+    attachment.mimeType,
+  );
+}
+
+returnData.push({
+  json: response,
+  binary: binaryObject,
+  pairedItem: { item: i },
+});
+```
+
+---
+
+## Advanced GenericFunctions Patterns
+
+### Rate Limiting with Retry
+
+Real pattern from Slack integration — respects `Retry-After` header:
+
+```typescript
+export async function myServiceApiRequestWithRetry(
+  this: IExecuteFunctions,
+  method: IHttpRequestMethods,
+  endpoint: string,
+  body: IDataObject = {},
+  qs: IDataObject = {},
+  maxRetries = 3,
+): Promise<any> {
+  let retryCount = 0;
+
+  while (true) {
+    try {
+      return await myServiceApiRequest.call(this, method, endpoint, body, qs);
+    } catch (error) {
+      if ((error as any).httpCode === '429' && retryCount < maxRetries) {
+        const retryAfter = (error as any).headers?.['retry-after'];
+        const waitMs = retryAfter ? parseInt(retryAfter, 10) * 1000 : 30_000;
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+        retryCount++;
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+```
+
+### Link-Header Pagination
+
+Used by GitHub, Shopify, and similar APIs:
+
+```typescript
+export async function myServiceApiRequestAllItems(
+  this: IExecuteFunctions,
+  method: IHttpRequestMethods,
+  endpoint: string,
+  body: IDataObject = {},
+  qs: IDataObject = {},
+): Promise<IDataObject[]> {
+  const returnData: IDataObject[] = [];
+  let uri: string | undefined;
+
+  do {
+    const response = await myServiceApiRequest.call(
+      this, method, endpoint, body, qs, uri, { resolveWithFullResponse: true },
+    );
+
+    returnData.push(...(response.body as IDataObject[]));
+
+    // Parse Link header: <url>; rel="next"
+    const linkHeader = response.headers?.link as string | undefined;
+    if (linkHeader?.includes('rel="next"')) {
+      uri = linkHeader.split(';')[0].replace('<', '').replace('>', '').trim();
+    } else {
+      uri = undefined;
+    }
+  } while (uri);
+
+  return returnData;
+}
+```
+
+### Multiple Authentication Methods
+
+Common pattern when a service supports both API key and OAuth2:
+
+```typescript
+export async function myServiceApiRequest(
+  this: IExecuteFunctions | ILoadOptionsFunctions | IHookFunctions | IWebhookFunctions,
+  method: IHttpRequestMethods,
+  endpoint: string,
+  body: IDataObject = {},
+  qs: IDataObject = {},
+): Promise<any> {
+  const options: IHttpRequestOptions = {
+    method,
+    url: `https://api.myservice.com/v1${endpoint}`,
+    body,
+    qs,
+  };
+
+  const authenticationMethod = this.getNodeParameter('authentication', 0) as string;
+
+  try {
+    if (authenticationMethod === 'apiKey') {
+      return await this.helpers.httpRequestWithAuthentication.call(this, 'myServiceApi', options);
+    } else {
+      return await this.helpers.httpRequestWithAuthentication.call(this, 'myServiceOAuth2Api', options);
+    }
+  } catch (error) {
+    throw new NodeApiError(this.getNode(), error as JsonObject);
+  }
+}
+```
+
+### Data Transformation Helpers
+
+Common utility functions found across GenericFunctions.ts files:
+
+```typescript
+// Validate JSON strings (used before passing user-provided JSON to APIs)
+export function validateJSON(json: string | undefined): any {
+  try {
+    return JSON.parse(json!);
+  } catch {
+    return undefined;
+  }
+}
+
+// Remove null/undefined/empty values from request bodies
+export function clean(obj: IDataObject): IDataObject {
+  for (const key in obj) {
+    if (obj[key] === null || obj[key] === undefined || obj[key] === '') {
+      delete obj[key];
+    }
+  }
+  return obj;
+}
+
+// Convert camelCase keys to snake_case (for APIs that expect it)
+import { snakeCase } from 'lodash';
+
+export function keysToSnakeCase(obj: IDataObject): IDataObject {
+  const result: IDataObject = {};
+  for (const key of Object.keys(obj)) {
+    result[snakeCase(key)] = obj[key];
+  }
+  return result;
+}
+
+// Simplify nested API responses (flatten metadata)
+export function simplifyResponse(data: IDataObject[], propertyName: string): IDataObject[] {
+  return data.map((item) => {
+    const nested = item[propertyName] as IDataObject;
+    delete item[propertyName];
+    return { ...item, ...nested };
+  });
+}
+```
+
+### Logging in GenericFunctions
+
+```typescript
+export async function myServiceApiRequest(
+  this: IExecuteFunctions | ILoadOptionsFunctions,
+  // ...
+): Promise<any> {
+  // ...
+  } catch (error) {
+    const workflow = this.getWorkflow();
+    const node = this.getNode();
+    this.logger.error(
+      `API error in '${node.name}' (workflow '${workflow.id}'): ${(error as Error).message}`,
+      { node: node.name, workflowId: workflow.id },
+    );
+    throw new NodeApiError(this.getNode(), error as JsonObject);
+  }
+}
+```

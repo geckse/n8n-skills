@@ -276,6 +276,308 @@ options: [{
 }]
 ```
 
+### 25. Wrong preSend function signature
+
+**Wrong:**
+```typescript
+// Missing proper this type, wrong return type
+async function myPreSend(requestOptions: IHttpRequestOptions) {
+  requestOptions.body = { data: 'test' };
+  // Forgot to return requestOptions
+}
+```
+
+**Fix:** preSend functions must use `IExecuteSingleFunctions` as `this` and return `Promise<IHttpRequestOptions>`:
+```typescript
+export const myPreSend = async function (
+  this: IExecuteSingleFunctions,
+  requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+  requestOptions.body = { data: 'test' };
+  return requestOptions;  // Must return the modified options
+};
+```
+
+### 26. Missing returnFullResponse for custom postReceive
+
+**Wrong:**
+```typescript
+routing: {
+  request: {
+    method: 'GET',
+    url: '/files/download',
+    encoding: 'arraybuffer',
+    // Missing returnFullResponse — postReceive won't get headers
+  },
+  output: {
+    postReceive: [handleFileDownload],
+  },
+}
+```
+
+**Fix:** Custom postReceive functions that need response headers require `returnFullResponse: true`:
+```typescript
+routing: {
+  request: {
+    method: 'GET',
+    url: '/files/download',
+    returnFullResponse: true,  // Required for postReceive to receive IN8nHttpFullResponse
+    encoding: 'arraybuffer',
+  },
+  output: {
+    postReceive: [handleFileDownload],
+  },
+}
+```
+
+### 27. Reading resourceLocator value without extractValue
+
+**Wrong:**
+```typescript
+// In a listSearch or preSend method:
+const teamId = this.getCurrentNodeParameter('teamId') as string;
+// Returns { mode: 'list', value: 'abc123' } — an object, not a string!
+```
+
+**Fix:** Use `.value` on the returned object, or use `{ extractValue: true }`:
+```typescript
+// Option A: Access .value directly
+const teamIdParam = this.getCurrentNodeParameter('teamId') as INodeParameterResourceLocator;
+const teamId = teamIdParam.value as string;
+
+// Option B: Use extractValue option (when available)
+const teamId = this.getCurrentNodeParameter('teamId', { extractValue: true }) as string;
+```
+
+### 28. Missing paginate: false on non-list operations
+
+**Wrong:**
+```typescript
+// Create operation without paginate: false
+routing: {
+  request: { method: 'POST', url: '/records' },
+  send: {
+    preSend: [createRecordBody],
+    type: 'body',
+    // Missing paginate: false — may trigger unexpected pagination
+  },
+}
+```
+
+**Fix:** Always set `paginate: false` on operations that should not paginate (Create, Update, Delete):
+```typescript
+routing: {
+  request: { method: 'POST', url: '/records' },
+  send: {
+    paginate: false,
+    preSend: [createRecordBody],
+    type: 'body',
+  },
+}
+```
+
+### 29. Wrong postReceive function signature
+
+**Wrong:**
+```typescript
+// Treating postReceive like preSend
+async function handleResponse(
+  this: IExecuteSingleFunctions,
+  requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> { ... }
+```
+
+**Fix:** Custom postReceive functions receive `(items, response)` and return `INodeExecutionData[]`:
+```typescript
+export const handleResponse = async function (
+  this: IExecuteSingleFunctions,
+  items: INodeExecutionData[],
+  response: IN8nHttpFullResponse,
+): Promise<INodeExecutionData[]> {
+  // Transform items based on response
+  return items;
+};
+```
+
+### 30. Missing URL encoding for user-provided values in routing URLs
+
+**Wrong:**
+```typescript
+url: '=/v3/contacts/{{$parameter.identifier}}'  // Email with @ will break the URL
+```
+
+**Fix:** Use `encodeURIComponent()` for user-provided values that may contain special characters:
+```typescript
+url: '=/v3/contacts/{{encodeURIComponent($parameter.identifier)}}'
+```
+
+### 31. Wrong property path expression for dynamic nested body fields
+
+**Wrong:**
+```typescript
+routing: {
+  send: {
+    property: 'attributes.$parent.fieldName',  // Literal string, not evaluated
+    type: 'body',
+  },
+}
+```
+
+**Fix:** Dynamic property paths must start with `=` and use `{{}}` for expressions:
+```typescript
+routing: {
+  send: {
+    property: '=attributes.{{$parent.fieldName}}',  // Evaluates to body.attributes[selectedField]
+    type: 'body',
+  },
+}
+```
+
+Same for array indexing:
+```typescript
+property: '=items[{{$index}}].value',  // Not 'items[$index].value'
+```
+
+### 32. Missing ignoreHttpStatusErrors for custom error postReceive
+
+**Wrong:**
+```typescript
+routing: {
+  request: {
+    method: 'DELETE',
+    url: '=/items/{{$parameter.itemId}}',
+    // Missing ignoreHttpStatusErrors — n8n throws before postReceive runs
+  },
+  output: {
+    postReceive: [handleErrors],  // Never reached on 4xx/5xx
+  },
+}
+```
+
+**Fix:** Add `ignoreHttpStatusErrors: true` so your custom postReceive function can inspect the response:
+```typescript
+routing: {
+  request: {
+    method: 'DELETE',
+    url: '=/items/{{$parameter.itemId}}',
+    ignoreHttpStatusErrors: true,
+  },
+  output: {
+    postReceive: [handleErrors],  // Now receives 4xx/5xx responses
+  },
+}
+```
+
+### 33. Offset pagination missing rootProperty
+
+**Wrong:**
+```typescript
+operations: {
+  pagination: {
+    type: 'offset',
+    properties: {
+      limitParameter: 'limit',
+      offsetParameter: 'offset',
+      pageSize: 100,
+      type: 'query',
+      // Missing rootProperty — pagination can't find items in nested response
+    },
+  },
+}
+// API returns: { data: { items: [...] } }
+```
+
+**Fix:** Set `rootProperty` to the JSON path where the items array lives:
+```typescript
+operations: {
+  pagination: {
+    type: 'offset',
+    properties: {
+      limitParameter: 'limit',
+      offsetParameter: 'offset',
+      pageSize: 100,
+      rootProperty: 'data.items',
+      type: 'query',
+    },
+  },
+}
+```
+
+### 34. Generic pagination continue expression always true
+
+**Wrong:**
+```typescript
+operations: {
+  pagination: {
+    type: 'generic',
+    properties: {
+      continue: '={{ $response.body.nextPageToken }}',  // Non-empty string is truthy
+      request: { qs: { pageToken: '={{ $response.body.nextPageToken }}' } },
+    },
+  },
+}
+```
+
+**Fix:** Use `!!` to coerce to boolean, so empty strings and undefined become `false`:
+```typescript
+operations: {
+  pagination: {
+    type: 'generic',
+    properties: {
+      continue: '={{ !!$response.body?.nextPageToken }}',
+      request: { qs: { pageToken: '={{ $response.body?.nextPageToken ?? "" }}' } },
+    },
+  },
+}
+```
+
+### 35. Custom pagination function missing makeRoutingRequest
+
+**Wrong:**
+```typescript
+// Using httpRequest directly in pagination — skips auth, preSend, postReceive
+operations: {
+  pagination: async function(this, requestOptions) {
+    const response = await this.helpers.httpRequest(requestOptions.options);  // Wrong
+    // ...
+  },
+}
+```
+
+**Fix:** Use `this.makeRoutingRequest()` which delegates to n8n's routing engine (handles auth, preSend, postReceive automatically):
+```typescript
+operations: {
+  pagination: async function(this, requestOptions) {
+    const responseData = await this.makeRoutingRequest(requestOptions);  // Correct
+    // ...
+  },
+}
+```
+
+### 36. Using propertyInDotNotation when dots are literal
+
+**Wrong:**
+```typescript
+// API field name contains a literal dot: "custom.field"
+routing: {
+  send: {
+    property: 'custom.field',  // Creates body.custom.field (nested) instead of body["custom.field"]
+    type: 'body',
+  },
+}
+```
+
+**Fix:** Set `propertyInDotNotation: false` when property names contain literal dots:
+```typescript
+routing: {
+  send: {
+    property: 'custom.field',
+    propertyInDotNotation: false,  // Treats "custom.field" as a flat key
+    type: 'body',
+  },
+}
+```
+
 ## Linter Errors
 
 ### 20. Using deprecated request APIs
@@ -378,3 +680,15 @@ The n8n-nodes-starter includes a `prepublishOnly` script that runs `n8n-node pre
 | `$credential` not resolving | Use `$credentials` (plural) in expressions |
 | Return type error in execute | Return `[returnData]` not `returnData` |
 | Delete returns `{ success: true }` | Use `{ deleted: true }` per n8n UX guidelines |
+| preSend not modifying request | Return the modified `requestOptions` — forgetting to return is a common error |
+| postReceive not receiving headers | Add `returnFullResponse: true` to the operation's `routing.request` |
+| resourceLocator returns object | Use `.value` on the result or pass `{ extractValue: true }` to `getCurrentNodeParameter` |
+| Create/Update triggering pagination | Add `paginate: false` to `routing.send` on non-list operations |
+| Custom postReceive wrong signature | Use `(items: INodeExecutionData[], response: IN8nHttpFullResponse)` not `(requestOptions)` |
+| URL breaks with special characters | Use `encodeURIComponent()` in routing URL expressions for user values |
+| Dynamic property path not evaluated | Use `=` prefix and `{{}}`: `'=attributes.{{$parent.fieldName}}'` not `'attributes.$parent.fieldName'` |
+| Custom error handler never reached | Add `ignoreHttpStatusErrors: true` to the operation's `routing.request` |
+| Offset pagination returns no data | Set `rootProperty` to the JSON path of the items array in the response |
+| Generic pagination loops forever | Use `!!` in `continue` expression: `'={{ !!$response.body?.nextToken }}'` |
+| Custom pagination skips auth | Use `this.makeRoutingRequest()` not `this.helpers.httpRequest()` |
+| Dot in property name creates nesting | Set `propertyInDotNotation: false` on `routing.send` for literal dots |
