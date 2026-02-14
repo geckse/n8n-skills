@@ -1,0 +1,134 @@
+{
+  "skill_name": "building-n8n-nodes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I want to build an n8n community node that integrates with the Notion API. It should support creating, reading, updating, and deleting pages. The API uses Bearer token auth. Help me scaffold and implement this node.",
+      "expected_output": "A complete declarative-style n8n node project with proper scaffolding command, base file with Resource/Operation pattern for pages (CRUD), credentials file with Bearer token auth and test endpoint, codex file, and icon guidance.",
+      "files": [],
+      "expectations": [
+        "The skill reads the SKILL.md and at least one reference file before writing code",
+        "The scaffold command uses npm create @n8n/node@latest, n8n-node new, or the n8n-nodes-starter repo",
+        "The node uses declarative style since it's a REST API",
+        "The base file has displayName, name, icon, group, version, description, defaults, inputs, outputs, usableAsTool, credentials, requestDefaults, and properties",
+        "There is a Resource parameter with noDataExpression: true",
+        "Operations include action field and a routing key with correct HTTP methods",
+        "Dynamic URLs use the = prefix: '=/pages/{{$parameter[\"pageId\"]}}'",
+        "The Get Many operation uses the returnAll/limit pair pattern",
+        "There is an Additional Fields collection for optional parameters",
+        "The credentials file implements ICredentialType with Bearer token in the Authorization header, has an icon property with Icon type, and uses import type for type-only imports",
+        "The credentials file has a test property for credential validation",
+        "A codex .node.json file is included with correct node field format (package-name.nodeName)",
+        "package.json includes strict: true, files: ['dist'], and peerDependencies for n8n-workflow"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Build me an n8n trigger node that polls a webhook.site endpoint every 30 seconds for new requests. It should be a community node package.",
+      "expected_output": "A programmatic-style trigger node using the poll pattern with polling: true, IPollFunctions, static data tracking, and return null for no new data.",
+      "files": [],
+      "expectations": [
+        "The skill correctly identifies that trigger nodes require the programmatic style",
+        "The scaffold uses the programmatic/example template",
+        "The node class name ends with 'Trigger' and displayName includes 'Trigger'",
+        "The description has group: ['trigger']",
+        "The description has inputs: [] (no inputs for triggers)",
+        "The description has polling: true",
+        "The node implements a poll() method using IPollFunctions",
+        "The poll method uses getWorkflowStaticData('node') to track last checked time",
+        "The poll method returns null when there are no new items (not an empty array)",
+        "Error handling uses NodeApiError or NodeOperationError",
+        "The package.json structure includes n8n attribute with strict: true and peerDependencies",
+        "A GenericFunctions.ts file is created for shared API helpers"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have an existing n8n node for a CRM API. I need to add a v2 that changes how contacts are created — the new version should send data in a different format. How do I add versioning?",
+      "expected_output": "Guidance on choosing between light versioning and full versioning, with code examples. Since the change is to a specific operation's behavior, full versioning with NodeVersionedType is likely appropriate.",
+      "files": [],
+      "expectations": [
+        "The skill explains both light versioning and full versioning options",
+        "Light versioning is described as using version array and @version in displayOptions",
+        "Full versioning is described as using NodeVersionedType with separate version directories",
+        "The skill recommends full versioning for changes to the execute method behavior",
+        "The skill notes that full versioning is only available for programmatic-style nodes",
+        "Code examples show the directory structure (v1/, v2/ folders)",
+        "The main node file extends NodeVersionedType with defaultVersion set to the latest"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Build a programmatic n8n node for a project management API. It needs contacts with CRUD operations, should use API key auth via header, and needs to support loading project lists dynamically from the API for a dropdown.",
+      "expected_output": "A complete programmatic node with execute method using constructExecutionMetaData, GenericFunctions.ts for shared API helpers, dynamic options via loadOptionsMethod, returnAll/limit for list operations, and proper error handling.",
+      "files": [],
+      "expectations": [
+        "The skill reads the SKILL.md and programmatic-node.md reference before writing code",
+        "Uses constructExecutionMetaData instead of manual pairedItem for item linking",
+        "Creates a GenericFunctions.ts file with shared apiRequest and apiRequestAllItems helpers, with IHookFunctions and IWebhookFunctions in the this type",
+        "Uses httpRequestWithAuthentication (not the deprecated requestWithAuthentication) with url (not uri)",
+        "Implements loadOptionsMethod for dynamic dropdown options from the API",
+        "Includes returnAll boolean toggle paired with conditional limit field for Get Many",
+        "Operation display names use Get Many (not Get All)",
+        "All operations have action fields",
+        "Resource and operation selectors have noDataExpression: true",
+        "The continueOnFail pattern wraps each item's processing in try/catch",
+        "The node description includes usableAsTool: true",
+        "The execute method returns [returnData] (nested array)",
+        "Delete operations return { deleted: true } (not { success: true }) per UX guidelines"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Build an n8n trigger node for a CRM that supports webhook-based events. The CRM has an API to register and deregister webhooks. It should trigger on 'contact.created' and 'deal.closed' events.",
+      "expected_output": "A programmatic webhook trigger with auto-registration using webhookMethods (checkExists, create, delete), static data for webhook ID persistence, and proper cleanup on deactivation.",
+      "files": [],
+      "expectations": [
+        "The skill identifies this as a webhook trigger with auto-registration pattern",
+        "The node has webhooks array with name, httpMethod, responseMode, and path",
+        "webhookMethods.default includes checkExists, create, and delete methods",
+        "checkExists uses getWorkflowStaticData('node') to check for existing webhook ID",
+        "create registers the webhook via API and stores the webhook ID in static data",
+        "delete deregisters the webhook via API and cleans up static data",
+        "The webhook() method processes the incoming payload with returnJsonArray",
+        "The description has inputs: [], group: ['trigger'], and Trigger suffix",
+        "Uses IHookFunctions for webhookMethods and IWebhookFunctions for webhook method",
+        "GenericFunctions.ts includes IHookFunctions and IWebhookFunctions in the this type union"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "I'm building my first n8n community node and keep hitting linter errors. Can you help me understand the most common mistakes and how to fix them?",
+      "expected_output": "A comprehensive guide covering the most frequent mistakes in n8n node development, referencing the common-mistakes.md catalog, with actionable fixes for each.",
+      "files": [],
+      "expectations": [
+        "The skill reads common-mistakes.md reference file",
+        "Covers import type vs regular import (rule of thumb explained)",
+        "Explains Get Many naming requirement (not Get All)",
+        "Covers the deprecated requestWithAuthentication → httpRequestWithAuthentication migration",
+        "Explains usableAsTool: true requirement",
+        "Covers credential icon requirement with Icon type",
+        "Mentions the $credentials plural expression syntax",
+        "Explains the = prefix requirement for dynamic routing expressions",
+        "Notes that execute() is ignored in declarative nodes with requestDefaults",
+        "Mentions the NodeConnectionType.Main type-only fallback to string 'main'"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "I'm building a node for a CRM API that returns 20+ fields per contact. The node also has a delete operation. What UX best practices should I follow for a verified community node?",
+      "expected_output": "Guidance on Simplify toggle for reducing output fields, delete operation returning {deleted: true}, Resource Locator for single-item selection, Upsert as a standard operation, and correct node categories.",
+      "files": [],
+      "expectations": [
+        "The skill reads the SKILL.md and mentions UX Patterns section",
+        "Recommends adding a Simplify boolean toggle for endpoints returning >10 fields",
+        "The Simplify description follows the standard: 'Whether to return a simplified version of the response instead of the raw data'",
+        "Delete operation returns { deleted: true } not { success: true }",
+        "Mentions Resource Locator (type: resourceLocator) for single-item selection fields",
+        "Lists correct node categories including Analytics, Development, Marketing & Content (not Marketing & Growth)",
+        "Mentions Upsert (Create or Update) as a standard operation pattern",
+        "Mentions sorting options for Get Many operations"
+      ]
+    }
+  ]
+}
