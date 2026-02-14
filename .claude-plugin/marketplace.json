@@ -1,0 +1,14 @@
+{
+  "name": "n8n-skills",
+  "owner": {
+    "name": "geckse"
+  },
+  "plugins": [
+    {
+      "name": "n8n-skills",
+      "source": ".",
+      "description": "Scaffolds, implements, tests, and publishes custom n8n community nodes using official best practices. Covers declarative and programmatic styles, all credential/auth patterns, trigger nodes, and verification requirements.",
+      "version": "1.0.0"
+    }
+  ]
+}
