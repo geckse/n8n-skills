@@ -532,18 +532,102 @@ const wf = workflow('multi-branch', 'Multi-Branch')
   .to(output)
 ```
 
-## Common Node Types
+## Looking Up Node Types — CRITICAL
+
+**NEVER guess or invent node type strings.** Always look up the real type and version from the n8n registry.
+
+### Official Nodes: `GET https://api.n8n.io/api/nodes`
+
+Returns all built-in n8n nodes. Use `attributes.name` as the `type` and `attributes.version` as the `version` in `node()` / `trigger()`.
+
+**Response structure:**
+```json
+{
+  "data": [
+    {
+      "id": 1242,
+      "attributes": {
+        "name": "n8n-nodes-base.slack",        // ← Use this as `type`
+        "displayName": "Slack",
+        "version": 2.2,                         // ← Use this as `version`
+        "description": "Send messages to Slack",
+        "group": "transform"
+      }
+    }
+  ]
+}
+```
+
+**How to search:** Fetch the full list and filter by `attributes.displayName` or `attributes.name` containing the service name.
+
+### Community Nodes: `GET https://api.n8n.io/api/community-nodes`
+
+Returns community-contributed nodes. Use `attributes.nodeDescription.name` as the `type`.
+
+**Response structure:**
+```json
+{
+  "data": [
+    {
+      "id": 456,
+      "attributes": {
+        "packageName": "@mendable/n8n-nodes-firecrawl",  // ← User must install this
+        "nodeDescription": {
+          "name": "@mendable/n8n-nodes-firecrawl.firecrawl",  // ← Use this as `type`
+          "displayName": "Firecrawl",
+          "version": 2,                                        // ← Use this as `version`
+          "description": "Scrape websites using Firecrawl API"
+        },
+        "isOfficialNode": true
+      }
+    }
+  ]
+}
+```
+
+**When using community nodes**, the user must install the npm package in their n8n instance first. **Always add a `sticky()` note** to the workflow:
+
+```typescript
+import { sticky } from '@n8n/workflow-sdk'
+
+const installWarning = sticky(
+  '⚠️ Required Community Node: Install "@mendable/n8n-nodes-firecrawl" in your n8n instance (Settings → Community Nodes → Install) before using this workflow.',
+  [firecrawlNode],  // Position near the community node
+  { color: 5 }
+)
+
+// Add the sticky to the workflow
+workflow('id', 'name')
+  .add(installWarning)
+  .add(triggerNode)
+  .to(firecrawlNode)
+```
+
+If the workflow uses **multiple community packages**, list them all in one sticky note or use separate notes per package.
+
+### Lookup Order
+
+1. User asks for a node (e.g., "Slack", "Notion", "Firecrawl")
+2. Fetch `https://api.n8n.io/api/nodes` → search by name
+3. If found → use `attributes.name` and `attributes.version`
+4. If NOT found → fetch `https://api.n8n.io/api/community-nodes` → search by name
+5. If found in community → use the type + add a `sticky()` note with the `packageName`
+6. If NOT found anywhere → tell the user the node doesn't exist, do not invent one
+
+### Core Utility Nodes (Safe Without Lookup)
+
+These fundamental nodes are always available and don't need a registry lookup:
 
 | Type | Description |
 |------|-------------|
 | `n8n-nodes-base.manualTrigger` | Manual execution trigger |
 | `n8n-nodes-base.webhook` | HTTP webhook trigger |
 | `n8n-nodes-base.scheduleTrigger` | Cron/interval trigger |
-| `n8n-nodes-base.httpRequest` | HTTP request |
-| `n8n-nodes-base.set` | Set/transform data |
+| `n8n-nodes-base.httpRequest` | Generic HTTP request |
+| `n8n-nodes-base.set` | Set/transform data fields |
 | `n8n-nodes-base.code` | Custom JavaScript/Python code |
 | `n8n-nodes-base.if` | Conditional branching |
-| `n8n-nodes-base.switch` | Multi-branch switching |
+| `n8n-nodes-base.switch` | Multi-branch routing |
 | `n8n-nodes-base.merge` | Merge multiple inputs |
 | `n8n-nodes-base.splitInBatches` | Batch processing loop |
 | `n8n-nodes-base.respondToWebhook` | Respond to webhook |
@@ -558,5 +642,5 @@ const wf = workflow('multi-branch', 'Multi-Branch')
 | `n8n-nodes-base.executeWorkflow` | Execute sub-workflow |
 | `n8n-nodes-base.stickyNote` | Canvas annotation |
 | `@n8n/n8n-nodes-langchain.agent` | AI Agent |
-| `@n8n/n8n-nodes-langchain.chainLlm` | Basic LLM Chain |
-| `@n8n/n8n-nodes-langchain.chainSummarization` | Summarization Chain |
+
+**For ANY integration node not in this list** (Slack, Gmail, Notion, Airtable, Google Sheets, Postgres, Stripe, etc.), you MUST look up the correct `type` and `version` from the registry API.

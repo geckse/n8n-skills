@@ -49,6 +49,84 @@ npx tsx src/my-workflow.ts
 
 The SDK is a pure TypeScript/JavaScript library — no build step is required. `tsx` runs `.ts` files directly. If the project already uses `ts-node` or another TypeScript runner, that works too.
 
+## CRITICAL: Node Type Lookup — Never Guess Node Types
+
+**DO NOT invent or guess node type identifiers.** n8n has hundreds of nodes, each with a specific `type` string (e.g., `n8n-nodes-base.slack`). Using a wrong or made-up type produces a workflow that fails in n8n.
+
+**Always look up the real node type** from the official n8n node registry before using it:
+
+### Official Nodes Registry
+
+```
+GET https://api.n8n.io/api/nodes
+```
+
+Returns all built-in n8n nodes. Each entry has:
+- `attributes.name` — The **node type identifier** to use in `node()` / `trigger()` (e.g., `"n8n-nodes-base.slack"`, `"@n8n/n8n-nodes-langchain.agent"`)
+- `attributes.displayName` — Human-readable name
+- `attributes.version` — Current version number
+- `attributes.description` — What the node does
+- `attributes.group` — `"trigger"` or other classification
+
+**How to find a node:** Fetch the registry and search for the node by display name or description. For example, to find the Slack node, search for entries where `attributes.displayName` or `attributes.name` contains "Slack" or "slack".
+
+### Community Nodes Registry
+
+```
+GET https://api.n8n.io/api/community-nodes
+```
+
+Returns community-contributed nodes. Each entry has:
+- `attributes.nodeDescription.name` — The **node type identifier**
+- `attributes.packageName` — The **npm package** the user must install (e.g., `"@mendable/n8n-nodes-firecrawl"`)
+- `attributes.nodeDescription.displayName` — Human-readable name
+- `attributes.nodeDescription.version` — Version number
+- `attributes.isOfficialNode` — Whether verified by n8n
+
+**When using a community node**, the user must install the npm package in their n8n instance first. **Always add a `sticky()` note** to the workflow warning about the required community node package:
+
+```typescript
+const installNote = sticky(
+  '⚠️ Required Community Node: Install the "@mendable/n8n-nodes-firecrawl" package in your n8n instance (Settings → Community Nodes → Install) before using this workflow.',
+  [firecrawlNode],
+  { color: 5 }
+)
+```
+
+### Lookup Workflow
+
+1. **User asks for a specific integration** (e.g., "add a Slack node")
+2. **Fetch `https://api.n8n.io/api/nodes`** and search for the matching node
+3. **If not found in official nodes**, fetch `https://api.n8n.io/api/community-nodes` and search there
+4. **Use the exact `type` and `version`** from the registry in your `node()` / `trigger()` call
+5. **If using a community node**, add a `sticky()` note listing the required npm package
+6. **If no matching node exists**, tell the user — do not invent a type
+
+### Quick Reference: Core Utility Nodes
+
+These fundamental utility nodes are always safe to use without a registry lookup:
+
+| Type | Description |
+|------|-------------|
+| `n8n-nodes-base.manualTrigger` | Manual execution trigger |
+| `n8n-nodes-base.webhook` | HTTP webhook trigger |
+| `n8n-nodes-base.scheduleTrigger` | Cron/interval trigger |
+| `n8n-nodes-base.httpRequest` | Generic HTTP request |
+| `n8n-nodes-base.set` | Set/transform data fields |
+| `n8n-nodes-base.code` | Custom JavaScript/Python code |
+| `n8n-nodes-base.if` | Conditional branching |
+| `n8n-nodes-base.switch` | Multi-branch routing |
+| `n8n-nodes-base.merge` | Merge multiple inputs |
+| `n8n-nodes-base.splitInBatches` | Batch processing loop |
+| `n8n-nodes-base.noOp` | No operation (passthrough) |
+| `n8n-nodes-base.stickyNote` | Canvas annotation |
+| `n8n-nodes-base.respondToWebhook` | Respond to webhook |
+| `n8n-nodes-base.filter` | Filter items |
+| `n8n-nodes-base.executeWorkflow` | Execute sub-workflow |
+| `@n8n/n8n-nodes-langchain.agent` | AI Agent |
+
+**For ANY integration node not in this list** (Slack, Gmail, Notion, Airtable, Google Sheets, Postgres, etc.), you MUST look up the correct `type` and `version` from the registry API before using it.
+
 ## Core Concepts
 
 The SDK provides a **fluent, chainable API** for building n8n workflows in TypeScript/JavaScript. Instead of hand-crafting JSON, you construct workflows programmatically with full type safety, validation, and testing capabilities.
@@ -269,12 +347,14 @@ const wf = workflow('ai-workflow', 'AI Agent Workflow')
 ### When to Use Each Pattern
 
 **Creating a brand-new workflow:**
-1. Design the flow (trigger → processing → output)
-2. Create nodes with `node()` and `trigger()`
-3. Chain with `.add()` and `.to()`
-4. Add output declarations for testing
-5. Validate with `validateWorkflow()`
-6. Export with `.toJSON()`
+1. **Look up node types** — Fetch `https://api.n8n.io/api/nodes` (and `/community-nodes` if needed) to get the correct `type` and `version` for every integration node
+2. Design the flow (trigger → processing → output)
+3. Create nodes with `node()` and `trigger()` using the real types from the registry
+4. If using community nodes, add `sticky()` notes listing required npm packages
+5. Chain with `.add()` and `.to()`
+6. Add output declarations for testing
+7. Validate with `validateWorkflow()`
+8. Export with `.toJSON()`
 
 **Modifying an existing n8n workflow (JSON):**
 1. Load with `workflow.fromJSON(json)`
@@ -392,9 +472,11 @@ This skill is for **building and manipulating n8n workflows programmatically** u
 
 ## Best Practices
 
-1. **Always validate before exporting** — Call `validateWorkflow()` before `.toJSON()`. The SDK catches 23+ error conditions that would silently produce broken workflows in n8n, so skipping validation means shipping bugs.
-2. **Use output declarations for testing** — Add `output` to node configs, then call `generatePinData()`. Without output declarations, there's no way to generate test fixtures automatically, and downstream nodes can't be tested with realistic data shapes.
-3. **Use `generateWorkflowCode()` to understand existing workflows** — Raw n8n JSON is verbose and hard to follow. The generated TypeScript code reveals the logical flow, branching, and node relationships at a glance.
+1. **NEVER guess node types — always look them up** — Fetch `https://api.n8n.io/api/nodes` (official) or `https://api.n8n.io/api/community-nodes` (community) to get the real `type` and `version`. A made-up node type produces a broken workflow. See the "Node Type Lookup" section above.
+2. **Flag community nodes with sticky notes** — If the workflow uses community nodes, add a `sticky()` note listing the npm packages the user must install in their n8n instance.
+3. **Always validate before exporting** — Call `validateWorkflow()` before `.toJSON()`. The SDK catches 23+ error conditions that would silently produce broken workflows in n8n, so skipping validation means shipping bugs.
+4. **Use output declarations for testing** — Add `output` to node configs, then call `generatePinData()`. Without output declarations, there's no way to generate test fixtures automatically, and downstream nodes can't be tested with realistic data shapes.
+5. **Use `generateWorkflowCode()` to understand existing workflows** — Raw n8n JSON is verbose and hard to follow. The generated TypeScript code reveals the logical flow, branching, and node relationships at a glance.
 4. **Use `parseWorkflowCode()` for round-tripping** — Code → JSON → Code round-trips cleanly, making it safe to convert, edit in code, and convert back without data loss.
 5. **Use `parseWorkflowCodeToBuilder()` when you need validation** — Unlike `parseWorkflowCode()` which returns raw JSON, this returns a WorkflowBuilder so you can `.validate()` before `.toJSON()`, catching errors before they reach n8n.
 6. **Use credentials objects, not hardcoded values** — Hardcoded API keys in parameters are a security risk and won't work across environments. The validator catches `HARDCODED_CREDENTIALS` to prevent this.
