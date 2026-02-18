@@ -200,7 +200,7 @@ const myNode = wf.getNode('HTTP Request')
 ```typescript
 // Add output declarations to nodes
 const httpNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 5,
+  type: 'n8n-nodes-base.httpRequest', version: 4,
   config: {
     output: [
       { json: { id: 1, name: 'Item 1', status: 'active' } },
@@ -270,7 +270,7 @@ const webhookTrigger = trigger({
 
 // 2. Define processing nodes
 const getData = node({
-  type: 'n8n-nodes-base.httpRequest', version: 5,
+  type: 'n8n-nodes-base.httpRequest', version: 4,
   config: {
     name: 'Fetch User',
     parameters: {
@@ -282,7 +282,7 @@ const getData = node({
 })
 
 const transform = node({
-  type: 'n8n-nodes-base.set', version: 3.4,
+  type: 'n8n-nodes-base.set', version: 3,
   config: {
     name: 'Format Response',
     parameters: {
@@ -298,7 +298,7 @@ const transform = node({
 })
 
 const respond = node({
-  type: 'n8n-nodes-base.respondToWebhook', version: 1.1,
+  type: 'n8n-nodes-base.respondToWebhook', version: 2,
   config: {
     name: 'Respond',
     parameters: { respondWith: 'json' }

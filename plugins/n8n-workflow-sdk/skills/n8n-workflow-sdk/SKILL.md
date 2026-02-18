@@ -131,7 +131,7 @@ const installNote = sticky(
 
 ### Quick Reference: Core Utility Nodes
 
-These fundamental utility nodes are always safe to use without a registry lookup:
+These fundamental utility node **type names** are always safe to use without a registry lookup. However, **always look up the correct `version`** from `references/node-registry-official.json` — do NOT copy version numbers from code examples, as they may be outdated.
 
 | Type | Description |
 |------|-------------|
@@ -151,6 +151,8 @@ These fundamental utility nodes are always safe to use without a registry lookup
 | `n8n-nodes-base.filter` | Filter items |
 | `n8n-nodes-base.executeWorkflow` | Execute sub-workflow |
 | `@n8n/n8n-nodes-langchain.agent` | AI Agent |
+
+**⚠️ IMPORTANT: Version numbers in code examples throughout this skill are illustrative and may be outdated.** The **only reliable source** for the current version of any node is `references/node-registry-official.json` (or `references/node-registry-community.json` for community nodes). Always read the registry cache to get the correct `version` before using any node, even core utility nodes listed above.
 
 **For ANY integration node not in this list** (Slack, Gmail, Notion, Airtable, Google Sheets, Postgres, etc.), you MUST look up the correct `type` and `version` from the registry cache before using it.
 
@@ -177,7 +179,7 @@ import { workflow, node, trigger, validateWorkflow } from '@n8n/workflow-sdk'
 
 const myTrigger = trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config: {} })
 const httpNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 5,
+  type: 'n8n-nodes-base.httpRequest', version: 4,
   config: {
     parameters: { url: 'https://api.example.com/data', method: 'GET' },
     output: [{ json: { id: 1, name: 'Example' } }]
@@ -208,8 +210,20 @@ const code = generateWorkflowCode(existingWorkflowJSON)
 
 // 3. Modify — add a new node
 const newNode = node({
-  type: 'n8n-nodes-base.set', version: 3.4,
-  config: { name: 'Transform', parameters: { mode: 'manual', fields: { values: [] } } }
+  type: 'n8n-nodes-base.set', version: 3,
+  config: {
+    name: 'Transform',
+    parameters: {
+      mode: 'manual',
+      fields: {
+        values: [
+          { name: 'processed', type: 'boolean', booleanValue: true },
+          { name: 'label', type: 'string', stringValue: '={{ $json.name }}' }
+        ]
+      },
+      include: 'all'
+    }
+  }
 })
 // Rebuild with modifications using the SDK
 
@@ -244,7 +258,7 @@ const result = validateWorkflow(newJSON)
 import { workflow, node, trigger, languageModel, tool, memory, fromAi } from '@n8n/workflow-sdk'
 
 const model = languageModel({
-  type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', version: 1.2,
+  type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', version: 1,
   config: {
     parameters: { model: 'gpt-4o' },
     credentials: { openAiApi: { name: 'OpenAI', id: 'cred-123' } }
@@ -252,7 +266,7 @@ const model = languageModel({
 })
 
 const emailTool = tool({
-  type: 'n8n-nodes-base.gmailTool', version: 1,
+  type: '@n8n/n8n-nodes-langchain.toolGmail', version: 1,
   config: {
     parameters: {
       recipient: fromAi('recipient', 'Email recipient address'),
@@ -262,7 +276,7 @@ const emailTool = tool({
 })
 
 const agent = node({
-  type: '@n8n/n8n-nodes-langchain.agent', version: 1.7,
+  type: '@n8n/n8n-nodes-langchain.agent', version: 3,
   config: {
     name: 'AI Agent',
     subnodes: { model, tools: [emailTool], memory: memoryNode }
@@ -499,7 +513,7 @@ This skill is for **building and manipulating n8n workflows programmatically** u
 
 ## Best Practices
 
-1. **NEVER guess node types — always look them up** — Read `references/node-registry-official.json` (official) or `references/node-registry-community.json` (community) to get the real `type` and `version`. A made-up node type produces a broken workflow. See the "Node Type Lookup" section above.
+1. **NEVER guess node types or versions — always look them up** — Read `references/node-registry-official.json` (official) or `references/node-registry-community.json` (community) to get the real `type` and `version`. Do NOT copy version numbers from code examples in this skill — they are illustrative and may be outdated. The registry cache is the single source of truth for versions. A wrong node type or version produces a broken workflow.
 2. **Flag community nodes with sticky notes** — If the workflow uses community nodes, add a `sticky()` note listing the npm packages the user must install in their n8n instance.
 3. **Always validate before exporting** — Call `validateWorkflow()` before `.toJSON()`. The SDK catches 23+ error conditions that would silently produce broken workflows in n8n, so skipping validation means shipping bugs.
 4. **Use output declarations for testing** — Add `output` to node configs, then call `generatePinData()`. Without output declarations, there's no way to generate test fixtures automatically, and downstream nodes can't be tested with realistic data shapes.

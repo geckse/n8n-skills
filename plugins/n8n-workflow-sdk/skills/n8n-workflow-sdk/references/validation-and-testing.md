@@ -178,7 +178,7 @@ Add `output` to node configs to declare expected output:
 
 ```typescript
 const httpNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 5,
+  type: 'n8n-nodes-base.httpRequest', version: 4,
   config: {
     name: 'Get Users',
     parameters: { url: 'https://api.example.com/users', method: 'GET' },
@@ -229,7 +229,7 @@ You can also set pinData directly on node config:
 
 ```typescript
 const httpNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 5,
+  type: 'n8n-nodes-base.httpRequest', version: 4,
   config: {
     name: 'Get Users',
     parameters: { url: '...', method: 'GET' },
@@ -255,7 +255,7 @@ import { workflow, node, trigger, validateWorkflow } from '@n8n/workflow-sdk'
 // Build the workflow
 const wf = workflow('test-1', 'Test Workflow')
   .add(trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config: {} }))
-  .to(node({ type: 'n8n-nodes-base.httpRequest', version: 5, config: {
+  .to(node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: {
     parameters: { url: 'https://api.example.com', method: 'GET' }
   }}))
 
@@ -274,7 +274,7 @@ console.assert(result.errors.length === 0, 'Should have no errors')
 const wf = workflow('test-2', 'Test Workflow')
   .add(trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config: {} }))
   .to(node({
-    type: 'n8n-nodes-base.httpRequest', version: 5,
+    type: 'n8n-nodes-base.httpRequest', version: 4,
     config: {
       name: 'Fetch Data',
       parameters: { url: 'https://api.example.com', method: 'GET' },
@@ -317,7 +317,7 @@ console.assert(
 ```typescript
 // Build a workflow that might have issues
 const wf = workflow('test-3', 'Test Workflow')
-  .add(node({ type: 'n8n-nodes-base.httpRequest', version: 5, config: {
+  .add(node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: {
     parameters: { url: 'https://api.example.com' }
   }}))
 
@@ -332,7 +332,7 @@ console.assert(
 // Fix: add a trigger
 const fixedWf = workflow('test-3-fixed', 'Fixed Workflow')
   .add(trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config: {} }))
-  .to(node({ type: 'n8n-nodes-base.httpRequest', version: 5, config: {
+  .to(node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: {
     parameters: { url: 'https://api.example.com' }
   }}))
 
@@ -438,7 +438,7 @@ import {
 // ===== TEST: Build and validate a complete AI workflow =====
 
 const model = languageModel({
-  type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', version: 1.2,
+  type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', version: 1,
   config: {
     parameters: { model: 'gpt-4o' },
     credentials: { openAiApi: { name: 'OpenAI', id: 'cred-123' } }
@@ -460,7 +460,7 @@ const searchTool = tool({
 })
 
 const agent = node({
-  type: '@n8n/n8n-nodes-langchain.agent', version: 1.7,
+  type: '@n8n/n8n-nodes-langchain.agent', version: 3,
   config: {
     name: 'Research Agent',
     parameters: { promptType: 'define', text: 'You are a research assistant.' },
