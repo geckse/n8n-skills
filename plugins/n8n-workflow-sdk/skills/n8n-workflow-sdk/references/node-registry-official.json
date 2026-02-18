@@ -2,7 +2,7 @@
   "_meta": {
     "source": "https://api.n8n.io/api/nodes",
     "total": 556,
-    "description": "Cached n8n official node registry. Run scripts/refresh-node-registry.sh to update."
+    "description": "Cached n8n official node registry. Run refresh-node-registry.sh to update."
   },
   "nodes": [
     {
@@ -128,7 +128,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.agent",
       "displayName": "AI Agent",
-      "version": 3,
+      "version": 3.1,
       "description": "Generates an action plan and executes it. Can use external tools.",
       "group": "[\"transform\"]",
       "alias": [
@@ -187,7 +187,7 @@
     {
       "name": "n8n-nodes-base.airtable",
       "displayName": "Airtable",
-      "version": 2,
+      "version": 2.1,
       "description": "Read, update, write and delete data from Airtable",
       "group": "[\"input\"]",
       "alias": [],
@@ -263,7 +263,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
       "displayName": "Anthropic Chat Model",
-      "version": 1,
+      "version": 1.3,
       "description": "Language Model Anthropic",
       "group": "[\"transform\"]",
       "alias": [
@@ -358,7 +358,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.lmChatAwsBedrock",
       "displayName": "AWS Bedrock Chat Model",
-      "version": 1,
+      "version": 1.1,
       "description": "Language Model AWS Bedrock",
       "group": "[\"transform\"]",
       "alias": [],
@@ -620,7 +620,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.chainLlm",
       "displayName": "Basic LLM Chain",
-      "version": 2,
+      "version": 1.9,
       "description": "A simple chain to prompt a large language model",
       "group": "[\"transform\"]",
       "alias": [
@@ -657,7 +657,7 @@
     {
       "name": "n8n-nodes-base.bitbucketTrigger",
       "displayName": "Bitbucket Trigger",
-      "version": 1,
+      "version": 1.1,
       "description": "Handle Bitbucket events via webhooks",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -800,7 +800,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.toolWorkflow",
       "displayName": "Call n8n Workflow Tool",
-      "version": 2,
+      "version": 2.2,
       "description": "Uses another n8n workflow as a tool. Allows packaging any n8n node(s) as a tool.",
       "group": "[\"transform\"]",
       "alias": [],
@@ -846,7 +846,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.chat",
       "displayName": "Chat",
-      "version": 1,
+      "version": 1.2,
       "description": "Send a message into the chat",
       "group": "[\"input\"]",
       "alias": [
@@ -868,7 +868,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.memoryManager",
       "displayName": "Chat Memory Manager",
-      "version": 1,
+      "version": 1.1,
       "description": "Manage chat messages memory and use it in the workflow",
       "group": "[\"transform\"]",
       "alias": [],
@@ -892,7 +892,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.chatTrigger",
       "displayName": "Chat Trigger",
-      "version": 1,
+      "version": 1.4,
       "description": "Runs the workflow when an n8n generated webchat is submitted",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -1008,7 +1008,7 @@
     {
       "name": "n8n-nodes-base.coda",
       "displayName": "Coda",
-      "version": 1,
+      "version": 1.1,
       "description": "Consume Coda API",
       "group": "[\"output\"]",
       "alias": [],
@@ -1039,7 +1039,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.toolCode",
       "displayName": "Code Tool",
-      "version": 1,
+      "version": 1.3,
       "description": "Write a tool in JS or Python",
       "group": "[\"transform\"]",
       "alias": [],
@@ -1087,7 +1087,7 @@
     {
       "name": "n8n-nodes-base.compareDatasets",
       "displayName": "Compare Datasets",
-      "version": 2,
+      "version": 2.3,
       "description": "Compare two inputs for changes",
       "group": "[\"transform\"]",
       "alias": [
@@ -1106,7 +1106,7 @@
     {
       "name": "n8n-nodes-base.compression",
       "displayName": "Compression",
-      "version": 1,
+      "version": 1.1,
       "description": "Compress and decompress files",
       "group": "[\"transform\"]",
       "alias": [
@@ -1153,7 +1153,7 @@
     {
       "name": "n8n-nodes-base.convertToFile",
       "displayName": "Convert to File",
-      "version": 1,
+      "version": 1.1,
       "description": "Convert JSON data to binary data",
       "group": "[\"input\"]",
       "alias": [
@@ -1184,7 +1184,7 @@
     {
       "name": "n8n-nodes-base.moveBinaryData",
       "displayName": "Convert to/from binary data",
-      "version": 1,
+      "version": 1.1,
       "description": "Move data between binary and JSON properties",
       "group": "[\"transform\"]",
       "alias": [
@@ -1392,7 +1392,7 @@
     {
       "name": "n8n-nodes-base.dataTable",
       "displayName": "Data table",
-      "version": 1,
+      "version": 1.1,
       "description": "Permanently save data across workflow executions in a table",
       "group": "[\"input\",\"transform\"]",
       "alias": [
@@ -1477,7 +1477,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "displayName": "Default Data Loader",
-      "version": 1,
+      "version": 1.1,
       "description": "Load data from previous step in the workflow",
       "group": "[\"transform\"]",
       "alias": [],
@@ -1609,7 +1609,7 @@
     {
       "name": "n8n-nodes-base.set",
       "displayName": "Edit Fields (Set)",
-      "version": 3,
+      "version": 3.4,
       "description": "Modify, add, or remove item fields",
       "group": "[\"input\"]",
       "alias": [
@@ -1662,7 +1662,7 @@
     {
       "name": "n8n-nodes-base.emailReadImap",
       "displayName": "Email Trigger (IMAP)",
-      "version": 2,
+      "version": 2.1,
       "description": "Triggers the workflow when a new email is received",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -1793,7 +1793,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "displayName": "Embeddings OpenAI",
-      "version": 1,
+      "version": 1.2,
       "description": "Use Embeddings OpenAI",
       "group": "[\"transform\"]",
       "alias": [],
@@ -1882,7 +1882,7 @@
     {
       "name": "n8n-nodes-base.evaluationTrigger",
       "displayName": "Evaluation Trigger",
-      "version": 5,
+      "version": 4.7,
       "description": "Run a test dataset through your workflow to check performance",
       "group": "[\"trigger\"]",
       "alias": [
@@ -1925,7 +1925,7 @@
     {
       "name": "n8n-nodes-base.executeWorkflow",
       "displayName": "Execute Sub-workflow",
-      "version": 1,
+      "version": 1.3,
       "description": "Execute another workflow",
       "group": "[\"transform\"]",
       "alias": [
@@ -1943,7 +1943,7 @@
     {
       "name": "n8n-nodes-base.executeWorkflowTrigger",
       "displayName": "Execute Workflow Trigger",
-      "version": 1,
+      "version": 1.1,
       "description": "Helpers for calling other n8n workflows. Used for designing modular, microservice-like workflows.",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -1954,7 +1954,7 @@
     {
       "name": "n8n-nodes-base.executionData",
       "displayName": "Execution Data",
-      "version": 1,
+      "version": 1.1,
       "description": "Add execution data for search",
       "group": "[\"input\"]",
       "alias": [
@@ -1970,7 +1970,7 @@
     {
       "name": "n8n-nodes-base.extractFromFile",
       "displayName": "Extract from File",
-      "version": 1,
+      "version": 1.1,
       "description": "Convert binary data to JSON",
       "group": "[\"input\"]",
       "alias": [
@@ -2064,7 +2064,7 @@
     {
       "name": "n8n-nodes-base.filter",
       "displayName": "Filter",
-      "version": 2,
+      "version": 2.3,
       "description": "Remove items matching a condition",
       "group": "[\"transform\"]",
       "alias": [
@@ -2254,7 +2254,7 @@
     {
       "name": "n8n-nodes-base.git",
       "displayName": "Git",
-      "version": 1,
+      "version": 1.1,
       "description": "Control git.",
       "group": "[\"transform\"]",
       "alias": [],
@@ -2266,7 +2266,7 @@
     {
       "name": "n8n-nodes-base.github",
       "displayName": "GitHub",
-      "version": 1,
+      "version": 1.1,
       "description": "Consume GitHub API",
       "group": "[\"input\"]",
       "alias": [],
@@ -2277,7 +2277,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.documentGithubLoader",
       "displayName": "GitHub Document Loader",
-      "version": 1,
+      "version": 1.1,
       "description": "Use GitHub data as input to this chain",
       "group": "[\"transform\"]",
       "alias": [],
@@ -2322,7 +2322,7 @@
     {
       "name": "n8n-nodes-base.gmail",
       "displayName": "Gmail",
-      "version": 2,
+      "version": 2.2,
       "description": "Consume the Gmail API",
       "group": "[\"transform\"]",
       "alias": [
@@ -2341,7 +2341,7 @@
     {
       "name": "n8n-nodes-base.gmailTrigger",
       "displayName": "Gmail Trigger",
-      "version": 1,
+      "version": 1.3,
       "description": "Fetches emails from Gmail and starts the workflow on specified polling intervals.",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -2386,7 +2386,7 @@
     {
       "name": "n8n-nodes-base.googleBigQuery",
       "displayName": "Google BigQuery",
-      "version": 2,
+      "version": 2.1,
       "description": "Consume Google BigQuery API",
       "group": "[\"input\"]",
       "alias": [],
@@ -2440,7 +2440,7 @@
     {
       "name": "n8n-nodes-base.googleCalendar",
       "displayName": "Google Calendar",
-      "version": 1,
+      "version": 1.3,
       "description": "Consume Google Calendar API",
       "group": "[\"input\"]",
       "alias": [],
@@ -2480,7 +2480,7 @@
     {
       "name": "n8n-nodes-base.googleFirebaseCloudFirestore",
       "displayName": "Google Cloud Firestore",
-      "version": 1,
+      "version": 1.1,
       "description": "Interact with Google Firebase - Cloud Firestore API",
       "group": "[\"input\"]",
       "alias": [],
@@ -2636,7 +2636,7 @@
     {
       "name": "n8n-nodes-base.googleSheets",
       "displayName": "Google Sheets",
-      "version": 5,
+      "version": 4.7,
       "description": "Read, update and write data to Google Sheets",
       "group": "[\"input\",\"output\"]",
       "alias": [
@@ -2763,7 +2763,7 @@
     {
       "name": "n8n-nodes-base.graphql",
       "displayName": "GraphQL",
-      "version": 1,
+      "version": 1.1,
       "description": "Makes a GraphQL request and returns the received data",
       "group": "[\"input\"]",
       "alias": [],
@@ -2907,7 +2907,7 @@
     {
       "name": "n8n-nodes-base.html",
       "displayName": "HTML",
-      "version": 1,
+      "version": 1.2,
       "description": "Work with HTML",
       "group": "[\"transform\"]",
       "alias": [
@@ -2933,7 +2933,7 @@
     {
       "name": "n8n-nodes-base.httpRequest",
       "displayName": "HTTP Request",
-      "version": 4,
+      "version": 4.4,
       "description": "Makes an HTTP request and returns the response data",
       "group": "[\"output\"]",
       "alias": [
@@ -2951,7 +2951,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.toolHttpRequest",
       "displayName": "HTTP Request Tool",
-      "version": 1,
+      "version": 1.1,
       "description": "Makes an HTTP request and returns the response data",
       "group": "[\"output\"]",
       "alias": [],
@@ -2963,7 +2963,7 @@
     {
       "name": "n8n-nodes-base.hubspot",
       "displayName": "HubSpot",
-      "version": 2,
+      "version": 2.2,
       "description": "Consume HubSpot API",
       "group": "[\"output\"]",
       "alias": [],
@@ -3034,7 +3034,7 @@
     {
       "name": "n8n-nodes-base.if",
       "displayName": "If",
-      "version": 2,
+      "version": 2.3,
       "description": "Route items to different branches (true/false)",
       "group": "[\"transform\"]",
       "alias": [
@@ -3076,7 +3076,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.informationExtractor",
       "displayName": "Information Extractor",
-      "version": 1,
+      "version": 1.2,
       "description": "Extract information from text in a structured format",
       "group": "[\"transform\"]",
       "alias": [
@@ -3156,7 +3156,7 @@
     {
       "name": "n8n-nodes-base.itemLists",
       "displayName": "Item Lists",
-      "version": 3,
+      "version": 3.1,
       "description": "Helper for working with lists of items and transforming arrays",
       "group": "[\"input\"]",
       "alias": [
@@ -3242,7 +3242,7 @@
     {
       "name": "n8n-nodes-base.jiraTrigger",
       "displayName": "Jira Trigger",
-      "version": 1,
+      "version": 1.1,
       "description": "Starts the workflow when Jira events occur",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -3307,7 +3307,7 @@
     {
       "name": "n8n-nodes-base.kafkaTrigger",
       "displayName": "Kafka Trigger",
-      "version": 1,
+      "version": 1.3,
       "description": "Consume messages from a Kafka topic",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -3486,7 +3486,7 @@
     {
       "name": "n8n-nodes-base.linear",
       "displayName": "Linear",
-      "version": 1,
+      "version": 1.1,
       "description": "Consume Linear API",
       "group": "[\"output\"]",
       "alias": [],
@@ -3703,7 +3703,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.manualChatTrigger",
       "displayName": "Manual Chat Trigger",
-      "version": 1,
+      "version": 1.1,
       "description": "Runs the flow on new manual chat message",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -3806,7 +3806,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.mcpClientTool",
       "displayName": "MCP Client Tool",
-      "version": 1,
+      "version": 1.2,
       "description": "Connect tools from an MCP Server",
       "group": "[\"output\"]",
       "alias": [
@@ -3848,7 +3848,7 @@
     {
       "name": "n8n-nodes-base.merge",
       "displayName": "Merge",
-      "version": 3,
+      "version": 3.2,
       "description": "Merges data of multiple streams once data from both is available",
       "group": "[\"transform\"]",
       "alias": [
@@ -3922,7 +3922,7 @@
     {
       "name": "n8n-nodes-base.microsoftExcel",
       "displayName": "Microsoft Excel 365",
-      "version": 2,
+      "version": 2.2,
       "description": "Consume Microsoft Excel API",
       "group": "[\"input\"]",
       "alias": [
@@ -3951,7 +3951,7 @@
     {
       "name": "n8n-nodes-base.microsoftOneDrive",
       "displayName": "Microsoft OneDrive",
-      "version": 1,
+      "version": 1.1,
       "description": "Consume Microsoft OneDrive API",
       "group": "[\"input\"]",
       "alias": [],
@@ -4014,7 +4014,7 @@
     {
       "name": "n8n-nodes-base.microsoftSql",
       "displayName": "Microsoft SQL",
-      "version": 1,
+      "version": 1.1,
       "description": "Get, add and update data in Microsoft SQL",
       "group": "[\"input\"]",
       "alias": [],
@@ -4157,7 +4157,7 @@
     {
       "name": "n8n-nodes-base.mongoDb",
       "displayName": "MongoDB",
-      "version": 1,
+      "version": 1.2,
       "description": "Find, insert and update documents in MongoDB",
       "group": "[\"input\"]",
       "alias": [],
@@ -4204,7 +4204,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.memoryMotorhead",
       "displayName": "Motorhead",
-      "version": 1,
+      "version": 1.3,
       "description": "Use Motorhead Memory",
       "group": "[\"transform\"]",
       "alias": [],
@@ -4264,7 +4264,7 @@
     {
       "name": "n8n-nodes-base.mySql",
       "displayName": "MySQL",
-      "version": 3,
+      "version": 2.5,
       "description": "Get, add and update data in MySQL",
       "group": "[\"input\"]",
       "alias": [],
@@ -4312,7 +4312,7 @@
     {
       "name": "n8n-nodes-base.formTrigger",
       "displayName": "n8n Form Trigger",
-      "version": 3,
+      "version": 2.5,
       "description": "Generate webforms in n8n and pass their responses to the workflow",
       "group": "[\"trigger\"]",
       "alias": [
@@ -4419,7 +4419,7 @@
     {
       "name": "n8n-nodes-base.notion",
       "displayName": "Notion",
-      "version": 2,
+      "version": 2.2,
       "description": "Consume Notion API",
       "group": "[\"output\"]",
       "alias": [],
@@ -4555,7 +4555,7 @@
     {
       "name": "n8n-nodes-base.openAi",
       "displayName": "OpenAI",
-      "version": 1,
+      "version": 1.1,
       "description": "Consume Open AI",
       "group": "[\"transform\"]",
       "alias": [
@@ -4569,7 +4569,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.openAi",
       "displayName": "OpenAI",
-      "version": 2,
+      "version": 2.1,
       "description": "Message an assistant or GPT, analyze images, generate audio, etc.",
       "group": "[\"transform\"]",
       "alias": [
@@ -4591,7 +4591,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.openAiAssistant",
       "displayName": "OpenAI Assistant",
-      "version": 1,
+      "version": 1.1,
       "description": "Utilizes Assistant API from Open AI.",
       "group": "[\"transform\"]",
       "alias": [
@@ -4605,7 +4605,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "displayName": "OpenAI Chat Model",
-      "version": 1,
+      "version": 1.3,
       "description": "For advanced usage with an AI chain",
       "group": "[\"transform\"]",
       "alias": [],
@@ -4834,7 +4834,7 @@
     {
       "name": "n8n-nodes-base.pipedriveTrigger",
       "displayName": "Pipedrive Trigger",
-      "version": 1,
+      "version": 1.1,
       "description": "Starts the workflow when Pipedrive events occur",
       "group": "[\"trigger\"]",
       "alias": [],
@@ -4869,7 +4869,7 @@
     {
       "name": "n8n-nodes-base.postgres",
       "displayName": "Postgres",
-      "version": 3,
+      "version": 2.6,
       "description": "Get, add and update data in Postgres",
       "group": "[\"input\"]",
       "alias": [],
@@ -4881,7 +4881,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "displayName": "Postgres Chat Memory",
-      "version": 1,
+      "version": 1.3,
       "description": "Stores the chat history in Postgres table.",
       "group": "[\"transform\"]",
       "alias": [],
@@ -5020,7 +5020,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
       "displayName": "Question and Answer Chain",
-      "version": 2,
+      "version": 1.7,
       "description": "Answer questions about retrieved documents",
       "group": "[\"transform\"]",
       "alias": [
@@ -5075,7 +5075,7 @@
     {
       "name": "n8n-nodes-base.rabbitmq",
       "displayName": "RabbitMQ",
-      "version": 1,
+      "version": 1.1,
       "description": "Sends messages to a RabbitMQ topic",
       "group": "[\"transform\"]",
       "alias": [],
@@ -5149,7 +5149,7 @@
     {
       "name": "n8n-nodes-base.readWriteFile",
       "displayName": "Read/Write Files from Disk",
-      "version": 1,
+      "version": 1.1,
       "description": "Read or write files from the computer that runs n8n",
       "group": "[\"input\"]",
       "alias": [
@@ -5205,7 +5205,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.memoryRedisChat",
       "displayName": "Redis Chat Memory",
-      "version": 2,
+      "version": 1.5,
       "description": "Stores the chat history in Redis.",
       "group": "[\"transform\"]",
       "alias": [],
@@ -5286,7 +5286,7 @@
     {
       "name": "n8n-nodes-base.respondToWebhook",
       "displayName": "Respond to Webhook",
-      "version": 2,
+      "version": 1.5,
       "description": "Returns data for Webhook",
       "group": "[\"transform\"]",
       "alias": [],
@@ -5320,7 +5320,7 @@
     {
       "name": "n8n-nodes-base.rssFeedRead",
       "displayName": "RSS Read",
-      "version": 1,
+      "version": 1.2,
       "description": "Reads data from an RSS Feed",
       "group": "[\"input\"]",
       "alias": [],
@@ -5390,7 +5390,7 @@
     {
       "name": "n8n-nodes-base.scheduleTrigger",
       "displayName": "Schedule Trigger",
-      "version": 1,
+      "version": 1.3,
       "description": "Triggers the workflow on a given schedule",
       "group": "[\"trigger\",\"schedule\"]",
       "alias": [
@@ -5464,7 +5464,7 @@
     {
       "name": "n8n-nodes-base.emailSend",
       "displayName": "Send Email",
-      "version": 2,
+      "version": 2.1,
       "description": "Sends an email using SMTP protocol",
       "group": "[\"output\"]",
       "alias": [
@@ -5509,7 +5509,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.sentimentAnalysis",
       "displayName": "Sentiment Analysis",
-      "version": 1,
+      "version": 1.1,
       "description": "Analyze the sentiment of your text",
       "group": "[\"transform\"]",
       "alias": [],
@@ -5604,7 +5604,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
       "displayName": "Simple Memory",
-      "version": 1,
+      "version": 1.3,
       "description": "Stores in n8n memory, so no credentials required",
       "group": "[\"transform\"]",
       "alias": [],
@@ -5658,7 +5658,7 @@
     {
       "name": "n8n-nodes-base.slack",
       "displayName": "Slack",
-      "version": 2,
+      "version": 2.4,
       "description": "Consume Slack API",
       "group": "[\"output\"]",
       "alias": [
@@ -5895,7 +5895,7 @@
     {
       "name": "n8n-nodes-base.strava",
       "displayName": "Strava",
-      "version": 1,
+      "version": 1.1,
       "description": "Consume Strava API",
       "group": "[\"input\"]",
       "alias": [],
@@ -5941,7 +5941,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "displayName": "Structured Output Parser",
-      "version": 1,
+      "version": 1.3,
       "description": "Return data in a defined JSON format",
       "group": "[\"transform\"]",
       "alias": [
@@ -5956,7 +5956,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.chainSummarization",
       "displayName": "Summarization Chain",
-      "version": 2,
+      "version": 2.1,
       "description": "Transforms text into a concise summary",
       "group": "[\"transform\"]",
       "alias": [
@@ -5970,7 +5970,7 @@
     {
       "name": "n8n-nodes-base.summarize",
       "displayName": "Summarize",
-      "version": 1,
+      "version": 1.1,
       "description": "Sum, count, max, etc. across items",
       "group": "[\"transform\"]",
       "alias": [
@@ -6059,7 +6059,7 @@
     {
       "name": "n8n-nodes-base.switch",
       "displayName": "Switch",
-      "version": 3,
+      "version": 3.4,
       "description": "Route items depending on defined expression or rules",
       "group": "[\"transform\"]",
       "alias": [
@@ -6154,7 +6154,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.textClassifier",
       "displayName": "Text Classifier",
-      "version": 1,
+      "version": 1.1,
       "description": "Classify your text into distinct categories",
       "group": "[\"transform\"]",
       "alias": [],
@@ -6216,7 +6216,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.toolThink",
       "displayName": "Think Tool",
-      "version": 1,
+      "version": 1.1,
       "description": "Invite the AI agent to do some thinking",
       "group": "[\"transform\"]",
       "alias": [],
@@ -6240,7 +6240,7 @@
     {
       "name": "n8n-nodes-base.todoist",
       "displayName": "Todoist",
-      "version": 2,
+      "version": 2.2,
       "description": "Consume Todoist API",
       "group": "[\"output\"]",
       "alias": [],
@@ -6410,7 +6410,7 @@
     {
       "name": "n8n-nodes-base.typeformTrigger",
       "displayName": "Typeform Trigger",
-      "version": 1,
+      "version": 1.1,
       "description": "Starts the workflow on a Typeform form submission",
       "group": "[\"trigger\"]",
       "alias": [
@@ -6482,7 +6482,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.toolVectorStore",
       "displayName": "Vector Store Question Answer Tool",
-      "version": 1,
+      "version": 1.1,
       "description": "Answer questions with a vector store",
       "group": "[\"transform\"]",
       "alias": [],
@@ -6647,7 +6647,7 @@
     {
       "name": "n8n-nodes-base.webhook",
       "displayName": "Webhook",
-      "version": 2,
+      "version": 2.1,
       "description": "Starts the workflow when a webhook is called",
       "group": "[\"trigger\"]",
       "alias": [
@@ -6790,7 +6790,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.retrieverWorkflow",
       "displayName": "Workflow Retriever",
-      "version": 1,
+      "version": 1.1,
       "description": "Use an n8n Workflow as Retriever",
       "group": "[\"transform\"]",
       "alias": [],
@@ -6869,7 +6869,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.memoryXata",
       "displayName": "Xata",
-      "version": 1,
+      "version": 1.4,
       "description": "Use Xata Memory",
       "group": "[\"transform\"]",
       "alias": [],
@@ -6960,7 +6960,7 @@
     {
       "name": "@n8n/n8n-nodes-langchain.memoryZep",
       "displayName": "Zep",
-      "version": 1,
+      "version": 1.3,
       "description": "Use Zep Memory",
       "group": "[\"transform\"]",
       "alias": [],

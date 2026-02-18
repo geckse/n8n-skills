@@ -23,7 +23,7 @@ import { node } from '@n8n/workflow-sdk'
 
 const myNode = node({
   type: 'n8n-nodes-base.httpRequest',   // Node type identifier
-  version: 4,                            // Node version number
+  version: 4.4,                          // Node version number
   config: {
     name: 'My HTTP Request',             // Display name (auto-generated if omitted)
     parameters: {                        // Node-specific parameters
@@ -99,7 +99,7 @@ const manualTrigger = trigger({
 
 const webhookTrigger = trigger({
   type: 'n8n-nodes-base.webhook',
-  version: 2,
+  version: 2.1,
   config: {
     name: 'Webhook',
     parameters: { path: 'my-webhook', httpMethod: 'POST' }
@@ -108,7 +108,7 @@ const webhookTrigger = trigger({
 
 const scheduleTrigger = trigger({
   type: 'n8n-nodes-base.scheduleTrigger',
-  version: 1,
+  version: 1.3,
   config: {
     name: 'Every Hour',
     parameters: { rule: { interval: [{ field: 'hours', hoursInterval: 1 }] } }
@@ -150,7 +150,7 @@ Mark values that the user must fill in:
 import { placeholder } from '@n8n/workflow-sdk'
 
 const httpNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 4,
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: {
     parameters: {
       url: placeholder('Enter your API endpoint URL'),
@@ -168,7 +168,7 @@ Mark credentials that need to be created (don't exist yet):
 import { newCredential } from '@n8n/workflow-sdk'
 
 const httpNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 4,
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: {
     credentials: {
       httpHeaderAuth: newCredential('My API Key')
@@ -198,7 +198,7 @@ import { languageModel } from '@n8n/workflow-sdk'
 
 const openai = languageModel({
   type: '@n8n/n8n-nodes-langchain.lmChatOpenAi',
-  version: 1,
+  version: 1.3,
   config: {
     parameters: {
       model: 'gpt-4o',
@@ -211,7 +211,7 @@ const openai = languageModel({
 
 const anthropic = languageModel({
   type: '@n8n/n8n-nodes-langchain.lmChatAnthropic',
-  version: 1,
+  version: 1.3,
   config: {
     parameters: { model: 'claude-sonnet-4-5-20250929' },
     credentials: { anthropicApi: { name: 'Anthropic', id: 'cred-456' } }
@@ -226,7 +226,7 @@ import { memory } from '@n8n/workflow-sdk'
 
 const bufferMemory = memory({
   type: '@n8n/n8n-nodes-langchain.memoryBufferWindow',
-  version: 1,
+  version: 1.3,
   config: {
     parameters: { contextWindowLength: 5 }
   }
@@ -262,7 +262,7 @@ const emailTool = tool({
 // Code tool
 const codeTool = tool({
   type: '@n8n/n8n-nodes-langchain.toolCode',
-  version: 1,
+  version: 1.3,
   config: {
     parameters: {
       name: 'lookup_user',
@@ -280,7 +280,7 @@ import { outputParser } from '@n8n/workflow-sdk'
 
 const structuredParser = outputParser({
   type: '@n8n/n8n-nodes-langchain.outputParserStructured',
-  version: 1,
+  version: 1.3,
   config: {
     parameters: {
       schemaType: 'manual',
@@ -370,7 +370,7 @@ Subnodes are attached via the `subnodes` config property:
 ```typescript
 const agent = node({
   type: '@n8n/n8n-nodes-langchain.agent',
-  version: 3,
+  version: 3.1,
   config: {
     name: 'AI Agent',
     parameters: {
@@ -465,7 +465,7 @@ multiOutput.output(1).to(branchB)  // Second output
 ### Input Selection (for Merge)
 
 ```typescript
-const mergeNode = merge({ version: 3, config: { name: 'Combine' } })
+const mergeNode = merge({ version: 3.2, config: { name: 'Combine' } })
 
 workflow('id', 'name')
   .add(sourceA).to(mergeNode.input(0))   // → merge input 0
@@ -496,7 +496,7 @@ workflow('id', 'name')
 
 ```typescript
 const errorHandler = node({
-  type: 'n8n-nodes-base.set', version: 3,
+  type: 'n8n-nodes-base.set', version: 3.4,
   config: { name: 'Handle Error', parameters: { /* ... */ } }
 })
 
@@ -516,10 +516,10 @@ workflow('id', 'name')
 import { workflow, node, trigger, merge } from '@n8n/workflow-sdk'
 
 const start = trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config: {} })
-const fetchA = node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: { name: 'Fetch A', parameters: { url: 'https://a.api' } } })
-const fetchB = node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: { name: 'Fetch B', parameters: { url: 'https://b.api' } } })
-const combiner = merge({ version: 3, config: { name: 'Combine', parameters: { mode: 'append' } } })
-const output = node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'Output' } })
+const fetchA = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Fetch A', parameters: { url: 'https://a.api' } } })
+const fetchB = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Fetch B', parameters: { url: 'https://b.api' } } })
+const combiner = merge({ version: 3.2, config: { name: 'Combine', parameters: { mode: 'append' } } })
+const output = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Output' } })
 
 const wf = workflow('multi-branch', 'Multi-Branch')
   .add(start)
@@ -602,6 +602,16 @@ Property fields:
 - `options` — Available choices for `"options"` type (each with `name` and `value`)
 - `description` — What the parameter does
 - `displayOptions` — Conditional visibility (`{"show": {"resource": ["message"]}}` means this param only applies when `resource` is `"message"`)
+
+**CRITICAL: Use the option `value`, NOT the display `name`.** For `options`-type parameters, the `name` is a human-readable label shown in the n8n UI, while the `value` is what goes in the workflow JSON. These are often very different:
+
+```
+"options": [{"name": "String", "value": "stringValue"}, ...]
+                     ^^^^^^^^              ^^^^^^^^^^^
+                     UI label              Use THIS in parameters
+```
+
+Common traps where display name ≠ value: Set node `type` (`"String"` → `"stringValue"`), Set `mode` (`"JSON"` → `"raw"`), HTTP Request `contentType` (`"Form Urlencoded"` → `"form-urlencoded"`), Code `language` (`"Python"` → `"pythonNative"`), Webhook `responseMode` (`"Immediately"` → `"onReceived"`), Merge `mode` (`"SQL Query"` → `"combineBySql"`).
 
 ### Refreshing the Cache
 
@@ -690,16 +700,16 @@ The Set node (`n8n-nodes-base.set`) — displayed as "Edit Fields" in n8n — tr
 ```typescript
 // Manual mode: set specific fields with static or expression values
 const setNode = node({
-  type: 'n8n-nodes-base.set', version: 3,
+  type: 'n8n-nodes-base.set', version: 3.4,
   config: {
     name: 'Edit Fields',
     parameters: {
       mode: 'manual',
       fields: {
         values: [
-          { name: 'fullName', type: 'string', stringValue: '={{ $json.firstName + " " + $json.lastName }}' },
-          { name: 'isActive', type: 'boolean', booleanValue: true },
-          { name: 'score', type: 'number', numberValue: 100 }
+          { name: 'fullName', type: 'stringValue', stringValue: '={{ $json.firstName + " " + $json.lastName }}' },
+          { name: 'isActive', type: 'booleanValue', booleanValue: true },
+          { name: 'score', type: 'numberValue', numberValue: 100 }
         ]
       },
       include: 'all'  // 'all' | 'none' | 'selected' | 'except'
@@ -709,7 +719,7 @@ const setNode = node({
 
 // JSON mode: output custom JSON directly
 const setJsonNode = node({
-  type: 'n8n-nodes-base.set', version: 3,
+  type: 'n8n-nodes-base.set', version: 3.4,
   config: {
     name: 'Custom Output',
     parameters: {
@@ -721,7 +731,7 @@ const setJsonNode = node({
 
 // Only keep certain fields from input
 const filterFieldsNode = node({
-  type: 'n8n-nodes-base.set', version: 3,
+  type: 'n8n-nodes-base.set', version: 3.4,
   config: {
     name: 'Keep Only Name and Email',
     parameters: {
@@ -738,16 +748,18 @@ const filterFieldsNode = node({
 
 | `type` | Value Property | Example |
 |--------|---------------|---------|
-| `'string'` | `stringValue` | `{ name: 'greeting', type: 'string', stringValue: 'Hello' }` |
-| `'number'` | `numberValue` | `{ name: 'count', type: 'number', numberValue: 42 }` |
-| `'boolean'` | `booleanValue` | `{ name: 'active', type: 'boolean', booleanValue: true }` |
+| `'stringValue'` | `stringValue` | `{ name: 'greeting', type: 'stringValue', stringValue: 'Hello' }` |
+| `'numberValue'` | `numberValue` | `{ name: 'count', type: 'numberValue', numberValue: 42 }` |
+| `'booleanValue'` | `booleanValue` | `{ name: 'active', type: 'booleanValue', booleanValue: true }` |
+| `'arrayValue'` | `arrayValue` | `{ name: 'items', type: 'arrayValue', arrayValue: '=[]' }` |
+| `'objectValue'` | `objectValue` | `{ name: 'data', type: 'objectValue', objectValue: '={}' }` |
 
 ### HTTP Request Node
 
 ```typescript
 // GET request with headers
 const getNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 4,
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: {
     name: 'Fetch Data',
     parameters: {
@@ -767,7 +779,7 @@ const getNode = node({
 
 // POST request with JSON body
 const postNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 4,
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: {
     name: 'Create User',
     parameters: {
@@ -789,7 +801,7 @@ const postNode = node({
 
 ```typescript
 const ifNode = node({
-  type: 'n8n-nodes-base.if', version: 2,
+  type: 'n8n-nodes-base.if', version: 2.3,
   config: {
     name: 'Check Status',
     parameters: {

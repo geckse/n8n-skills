@@ -166,7 +166,7 @@ interface ExpressionContext {
 
 ```typescript
 const httpNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 4,
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: {
     parameters: {
       // Using serializeExpression

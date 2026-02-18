@@ -21,7 +21,7 @@ import { node, workflow } from '@n8n/workflow-sdk'
 
 const ifNode = node({
   type: 'n8n-nodes-base.if',
-  version: 2,
+  version: 2.3,
   config: {
     name: 'Check Status',
     parameters: {
@@ -37,8 +37,8 @@ const ifNode = node({
   }
 })
 
-const trueNode = node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'Active Path' } })
-const falseNode = node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'Inactive Path' } })
+const trueNode = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Active Path' } })
+const falseNode = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Inactive Path' } })
 const endNode = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Continue' } })
 
 // Fluent API: .onTrue() and .onFalse() on the IF node
@@ -76,7 +76,7 @@ import { ifElse } from '@n8n/workflow-sdk'
 
 // ifElse() creates the IF node directly
 const ifComposite = ifElse({
-  version: 2,
+  version: 2.3,
   config: {
     name: 'Check',
     parameters: { /* conditions */ }
@@ -108,7 +108,7 @@ import { node, workflow } from '@n8n/workflow-sdk'
 
 const switchNode = node({
   type: 'n8n-nodes-base.switch',
-  version: 3,
+  version: 3.4,
   config: {
     name: 'Route by Type',
     parameters: {
@@ -123,9 +123,9 @@ const switchNode = node({
   }
 })
 
-const caseA = node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'Handle A' } })
-const caseB = node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'Handle B' } })
-const caseC = node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'Handle C' } })
+const caseA = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Handle A' } })
+const caseB = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Handle B' } })
+const caseC = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Handle C' } })
 const converge = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Continue' } })
 
 const wf = workflow('id', 'Switch Example')
@@ -140,7 +140,7 @@ const wf = workflow('id', 'Switch Example')
 import { switchCase } from '@n8n/workflow-sdk'
 
 const sw = switchCase({
-  version: 3,
+  version: 3.4,
   config: { name: 'Router', parameters: { /* rules */ } }
 })
 
@@ -167,7 +167,7 @@ Combines multiple input branches into a single flow.
 import { merge, workflow } from '@n8n/workflow-sdk'
 
 const mergeNode = merge({
-  version: 3,
+  version: 3.2,
   config: {
     name: 'Combine Results',
     parameters: { mode: 'append' }  // 'append' | 'combine' | 'chooseBranch'
@@ -228,12 +228,12 @@ const sib = splitInBatches({
 })
 
 const processNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 4,
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: { name: 'Process Batch', parameters: { url: 'https://api.example.com/batch' } }
 })
 
 const finalNode = node({
-  type: 'n8n-nodes-base.set', version: 3,
+  type: 'n8n-nodes-base.set', version: 3.4,
   config: { name: 'Finalize' }
 })
 
@@ -271,10 +271,10 @@ processNode.to(sib.sibNode)  // Direct access
 ```typescript
 const sib = splitInBatches({ version: 3, config: { parameters: { batchSize: 5 } } })
 
-const fetch = node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: { name: 'Fetch', parameters: { url: '...' } } })
-const transform = node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'Transform' } })
-const save = node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: { name: 'Save', parameters: { method: 'POST', url: '...' } } })
-const report = node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'Report' } })
+const fetch = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Fetch', parameters: { url: '...' } } })
+const transform = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Transform' } })
+const save = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Save', parameters: { method: 'POST', url: '...' } } })
+const report = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Report' } })
 
 const sibBuilder = sib
   .onEachBatch(
@@ -293,7 +293,7 @@ const wf = workflow('id', 'Complex Batch')
 
 ```typescript
 const riskyNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 4,
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: {
     name: 'Risky API Call',
     parameters: { url: 'https://unreliable-api.com' },
@@ -302,10 +302,10 @@ const riskyNode = node({
 })
 
 const errorHandler = node({
-  type: 'n8n-nodes-base.set', version: 3,
+  type: 'n8n-nodes-base.set', version: 3.4,
   config: {
     name: 'Handle Error',
-    parameters: { mode: 'manual', fields: { values: [{ name: 'error', type: 'boolean', booleanValue: true }] } }
+    parameters: { mode: 'manual', fields: { values: [{ name: 'error', type: 'booleanValue', booleanValue: true }] } }
   }
 })
 
@@ -340,7 +340,7 @@ const start = trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config
 
 // IF branching
 const checkType = node({
-  type: 'n8n-nodes-base.if', version: 2,
+  type: 'n8n-nodes-base.if', version: 2.3,
   config: {
     name: 'Is Bulk?',
     parameters: {
@@ -355,18 +355,18 @@ const checkType = node({
 
 // Bulk path: batch processing
 const sib = splitInBatches({ version: 3, config: { parameters: { batchSize: 5 } } })
-const processBatch = node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: { name: 'Process Batch', parameters: { url: '...' } } })
+const processBatch = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Process Batch', parameters: { url: '...' } } })
 const batchDone = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Batch Complete' } })
 const sibBuilder = sib
   .onEachBatch(processBatch.to(nextBatch(sib)))
   .onDone(batchDone)
 
 // Single path: direct processing
-const processSingle = node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: { name: 'Process Single', parameters: { url: '...' } } })
+const processSingle = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Process Single', parameters: { url: '...' } } })
 
 // Merge results
-const combiner = merge({ version: 3, config: { name: 'Combine' } })
-const output = node({ type: 'n8n-nodes-base.respondToWebhook', version: 2, config: { name: 'Respond' } })
+const combiner = merge({ version: 3.2, config: { name: 'Combine' } })
+const output = node({ type: 'n8n-nodes-base.respondToWebhook', version: 1.5, config: { name: 'Respond' } })
 
 const wf = workflow('complex-flow', 'Complex Control Flow')
   .add(start)
@@ -382,8 +382,8 @@ const result = validateWorkflow(wf)
 IF inside IF, Switch inside IF, etc.:
 
 ```typescript
-const outerIf = node({ type: 'n8n-nodes-base.if', version: 2, config: { name: 'Outer Check' } })
-const innerIf = node({ type: 'n8n-nodes-base.if', version: 2, config: { name: 'Inner Check' } })
+const outerIf = node({ type: 'n8n-nodes-base.if', version: 2.3, config: { name: 'Outer Check' } })
+const innerIf = node({ type: 'n8n-nodes-base.if', version: 2.3, config: { name: 'Inner Check' } })
 
 // Nested: outer true → inner IF → branches
 outerIf
@@ -396,8 +396,8 @@ outerIf
 Switch inside IF:
 
 ```typescript
-const ifNode = node({ type: 'n8n-nodes-base.if', version: 2, config: { name: 'Check' } })
-const switchNode = node({ type: 'n8n-nodes-base.switch', version: 3, config: { name: 'Route' } })
+const ifNode = node({ type: 'n8n-nodes-base.if', version: 2.3, config: { name: 'Check' } })
+const switchNode = node({ type: 'n8n-nodes-base.switch', version: 3.4, config: { name: 'Route' } })
 
 ifNode
   .onTrue(switchNode.onCase(0, caseA).onCase(1, caseB))

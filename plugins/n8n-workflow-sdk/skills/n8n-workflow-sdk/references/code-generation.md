@@ -76,7 +76,7 @@ const manualTrigger = trigger({
 
 const httpRequest = node({
   type: 'n8n-nodes-base.httpRequest',
-  version: 4,
+  version: 4.4,
   config: {
     name: 'HTTP Request',
     parameters: {
@@ -299,7 +299,7 @@ import { workflow, node, trigger, generateWorkflowCode, parseWorkflowCode } from
 const wf = workflow('test', 'Round Trip Test')
   .add(trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config: {} }))
   .to(node({
-    type: 'n8n-nodes-base.httpRequest', version: 4,
+    type: 'n8n-nodes-base.httpRequest', version: 4.4,
     config: { name: 'Fetch', parameters: { url: 'https://api.example.com' } }
   }))
 
@@ -322,13 +322,13 @@ const json2 = parseWorkflowCode(code)
 ```typescript
 // Build a complex workflow with IF, Merge, and AI nodes
 const wf = workflow('complex', 'Complex Round Trip')
-  .add(trigger({ type: 'n8n-nodes-base.webhook', version: 2, config: {
+  .add(trigger({ type: 'n8n-nodes-base.webhook', version: 2.1, config: {
     parameters: { path: 'test', httpMethod: 'POST' }
   }}))
   .to(ifNode.onTrue(
-    node({ type: 'n8n-nodes-base.httpRequest', version: 4, config: { name: 'True Path' } })
+    node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'True Path' } })
   ).onFalse(
-    node({ type: 'n8n-nodes-base.set', version: 3, config: { name: 'False Path' } })
+    node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'False Path' } })
   ))
   .to(mergeNode)
   .to(respondNode)

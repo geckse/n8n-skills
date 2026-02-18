@@ -96,6 +96,39 @@ grep 'n8n-nodes-base.slack' references/node-registry-properties.jsonl
 
 Each line is a JSON object: `{"node": "n8n-nodes-base.slack", "properties": [...]}` where `properties` contains the node's parameter definitions — field names, types, defaults, options, required flags, and conditional display rules. Use this to correctly configure the `parameters` object in `node()` / `trigger()`.
 
+**CRITICAL: Use option `value`, not display `name`.** For `options`-type parameters, the properties JSONL lists both a display `name` (what the UI shows) and the actual `value` (what goes in the workflow JSON). These are often different — you **must** use the `value`. For example, the Set node's field type options have display name `"String"` but value `"stringValue"`. Common traps:
+
+| Node | Parameter | Display Name | Actual Value |
+|------|-----------|-------------|--------------|
+| Set | `fields.values[].type` | `String` | `stringValue` |
+| Set | `mode` | `JSON` | `raw` |
+| HTTP Request | `contentType` | `Form Urlencoded` | `form-urlencoded` |
+| Code | `language` | `Python` | `pythonNative` |
+| Webhook | `responseMode` | `Immediately` | `onReceived` |
+| Merge | `mode` | `SQL Query` | `combineBySql` |
+
+#### Deriving version hints from properties data
+
+When the registry cache `version` field appears to be a rounded major version (e.g., `4` instead of `4.4`), you can derive the actual latest version from `@version` hints in the properties JSONL. About 96 of 554 nodes include these hints.
+
+Node properties use `displayOptions.show["@version"]` and `displayOptions.hide["@version"]` to control which fields appear for which versions. These arrays contain the version numbers the node supports, letting you infer the latest version.
+
+**How to extract version hints:**
+
+1. Grep the properties file for the node: `grep 'n8n-nodes-base.set' references/node-registry-properties.jsonl`
+2. Search the JSON for all `"@version"` values in `displayOptions`
+3. Collect all version numbers — they appear in two forms:
+   - **Explicit lists:** `"@version": [3, 3.1, 3.2]` — the node supports versions 3, 3.1, and 3.2
+   - **Conditions:** `"@version": [{"_cnd": {"gte": 3.1}}]` — applies to version ≥ 3.1
+4. The **maximum** value across all explicit numbers and condition thresholds approximates the latest minor version
+
+**Examples from real nodes:**
+- **Set node** — `"@version": [3, 3.1, 3.2]` → latest is at least `3.2` (actual defaultVersion: `3.4`)
+- **Agent node** — `"@version": [{"_cnd": {"gte": 3.1}}]` → latest is at least `3.1` (actual: `3.1`)
+- **Switch node** — `"@version": [{"_cnd": {"gte": 3.3}}]` → latest is at least `3.3` (actual: `3.4`)
+
+**Limitations:** This technique only provides a lower bound (the actual `defaultVersion` may be higher). ~458 of 554 nodes have no `@version` hints at all. The registry cache `version` field (updated via `refresh-node-registry.sh` which extracts real `defaultVersion` from npm packages) is always the most accurate source.
+
 ### Refreshing the Cache
 
 If a node can't be found in the cached registries (they may be outdated), **run the refresh script** to pull the latest data from the live APIs:
@@ -104,7 +137,7 @@ If a node can't be found in the cached registries (they may be outdated), **run 
 bash scripts/refresh-node-registry.sh
 ```
 
-This fetches from `https://api.n8n.io/api/nodes` and `https://api.n8n.io/api/community-nodes`, strips heavy fields, and updates all three cache files. Run this when you suspect the cache is stale or when a user asks for a node that should exist but isn't in the cache.
+This fetches from `https://api.n8n.io/api/nodes` and `https://api.n8n.io/api/community-nodes`, installs the `n8n-nodes-base` and `@n8n/n8n-nodes-langchain` npm packages to extract accurate `defaultVersion` values (the API only returns major versions), strips heavy fields, and updates all three cache files. Run this when you suspect the cache is stale or when a user asks for a node that should exist but isn't in the cache.
 
 ### Community Node Warning
 
@@ -179,7 +212,7 @@ import { workflow, node, trigger, validateWorkflow } from '@n8n/workflow-sdk'
 
 const myTrigger = trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config: {} })
 const httpNode = node({
-  type: 'n8n-nodes-base.httpRequest', version: 4,
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: {
     parameters: { url: 'https://api.example.com/data', method: 'GET' },
     output: [{ json: { id: 1, name: 'Example' } }]
@@ -210,15 +243,15 @@ const code = generateWorkflowCode(existingWorkflowJSON)
 
 // 3. Modify — add a new node
 const newNode = node({
-  type: 'n8n-nodes-base.set', version: 3,
+  type: 'n8n-nodes-base.set', version: 3.4,
   config: {
     name: 'Transform',
     parameters: {
       mode: 'manual',
       fields: {
         values: [
-          { name: 'processed', type: 'boolean', booleanValue: true },
-          { name: 'label', type: 'string', stringValue: '={{ $json.name }}' }
+          { name: 'processed', type: 'booleanValue', booleanValue: true },
+          { name: 'label', type: 'stringValue', stringValue: '={{ $json.name }}' }
         ]
       },
       include: 'all'
@@ -258,7 +291,7 @@ const result = validateWorkflow(newJSON)
 import { workflow, node, trigger, languageModel, tool, memory, fromAi } from '@n8n/workflow-sdk'
 
 const model = languageModel({
-  type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', version: 1,
+  type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', version: 1.3,
   config: {
     parameters: { model: 'gpt-4o' },
     credentials: { openAiApi: { name: 'OpenAI', id: 'cred-123' } }
@@ -276,7 +309,7 @@ const emailTool = tool({
 })
 
 const agent = node({
-  type: '@n8n/n8n-nodes-langchain.agent', version: 3,
+  type: '@n8n/n8n-nodes-langchain.agent', version: 3.1,
   config: {
     name: 'AI Agent',
     subnodes: { model, tools: [emailTool], memory: memoryNode }

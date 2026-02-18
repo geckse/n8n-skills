@@ -2,7 +2,7 @@
   "_meta": {
     "source": "https://api.n8n.io/api/community-nodes",
     "total": 25,
-    "description": "Cached n8n community node registry. Run scripts/refresh-node-registry.sh to update."
+    "description": "Cached n8n community node registry. Run refresh-node-registry.sh to update."
   },
   "nodes": [
     {
