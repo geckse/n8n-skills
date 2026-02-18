@@ -6,3 +6,5 @@ dist/
 .env.*
 *.js.map
 *.tsbuildinfo
+/references
+SDK-Reference.md

@@ -1,0 +1,193 @@
+{
+  "skill_name": "n8n-workflow-sdk",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create an n8n workflow using the SDK that has a manual trigger, fetches data from https://api.example.com/users with a GET request, and then transforms the data using a Set node. Make sure it's validated and has test data.",
+      "expected_output": "A complete SDK workflow with trigger, httpRequest, and set nodes chained with .add()/.to(), output declarations on the HTTP node, generatePinData() called, and validateWorkflow() used to verify the result.",
+      "files": [],
+      "expectations": [
+        "The skill reads SKILL.md and at least one reference file before writing code",
+        "Uses import { workflow, node, trigger, validateWorkflow } from '@n8n/workflow-sdk'",
+        "Creates a trigger with type 'n8n-nodes-base.manualTrigger'",
+        "Creates an HTTP node with type 'n8n-nodes-base.httpRequest', version 5, and parameters including url and method",
+        "Creates a Set node with type 'n8n-nodes-base.set'",
+        "Chains nodes with .add(trigger).to(httpNode).to(setNode)",
+        "Adds output declarations to the HTTP node for test data generation",
+        "Calls .generatePinData() on the workflow builder",
+        "Calls validateWorkflow() and checks result.valid",
+        "Exports with .toJSON() after validation passes"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I have an existing n8n workflow JSON that I need to understand and modify. Convert it to code so I can read it, add a new filter node after the HTTP Request node, validate the changes, and export it back to JSON.",
+      "expected_output": "Uses generateWorkflowCode() to convert JSON to readable code, then builds the modified workflow using the SDK, validates with validateWorkflow(), and exports with .toJSON().",
+      "files": [],
+      "expectations": [
+        "Uses generateWorkflowCode(existingJSON) to convert JSON to readable TypeScript code",
+        "Either uses workflow.fromJSON() to load the existing workflow or rebuilds it with the SDK",
+        "Adds a new filter node using node() with appropriate type and config",
+        "Connects the new node in the correct position in the chain",
+        "Validates the modified workflow with validateWorkflow()",
+        "Exports back to JSON with .toJSON()",
+        "Explains the round-trip pattern: JSON → code (understand) → modify → validate → JSON"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Build an AI agent workflow using the SDK with an OpenAI language model, a Gmail tool that uses fromAi() for recipient and subject, and buffer window memory. The agent should be triggered by a webhook.",
+      "expected_output": "A complete AI agent workflow using languageModel(), tool(), memory(), fromAi(), and the agent node with subnodes configuration.",
+      "files": [],
+      "expectations": [
+        "Uses import of languageModel, tool, memory, fromAi from '@n8n/workflow-sdk'",
+        "Creates a webhook trigger with trigger() and type 'n8n-nodes-base.webhook'",
+        "Creates a language model with languageModel() using '@n8n/n8n-nodes-langchain.lmChatOpenAi'",
+        "Creates a Gmail tool with tool() using fromAi() for recipient and subject parameters",
+        "fromAi() calls include key and description: fromAi('recipient', 'Email recipient address')",
+        "Creates memory with memory() using '@n8n/n8n-nodes-langchain.memoryBufferWindow'",
+        "Creates agent node with subnodes: { model, tools: [...], memory }",
+        "Credentials are referenced properly with { name: '...', id: '...' } or newCredential()",
+        "Workflow is validated with validateWorkflow()"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Create a workflow with IF/Else branching. The IF node should check if $json.status equals 'active'. The true branch should go to an HTTP POST request, and the false branch should go to a Set node. Both branches should merge back together and continue to a final respond node.",
+      "expected_output": "A workflow using the IF node's fluent API (.onTrue()/.onFalse()), a Merge node for reconvergence, and proper connection patterns.",
+      "files": [],
+      "expectations": [
+        "Creates an IF node with type 'n8n-nodes-base.if' and condition parameters",
+        "Uses the fluent API: ifNode.onTrue(trueNode).onFalse(falseNode)",
+        "Creates a merge node using merge() factory",
+        "Connects both branches to the merge node",
+        "Chains the merge to a respond/output node",
+        "Uses .to() on the IfElseBuilder to chain the merge node",
+        "The workflow is validated and doesn't have DISCONNECTED_NODE errors"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I need a workflow that processes items in batches of 10 using Split In Batches. Each batch should be sent to an API via HTTP POST, and when all batches are done, it should send a notification.",
+      "expected_output": "A workflow using splitInBatches() with .onEachBatch() that loops back via nextBatch(), and .onDone() for the completion handler.",
+      "files": [],
+      "expectations": [
+        "Uses import { splitInBatches, nextBatch } from '@n8n/workflow-sdk'",
+        "Creates SIB with splitInBatches({ version: 3, config: { parameters: { batchSize: 10 } } })",
+        "Uses .onEachBatch() to set the batch processing branch",
+        "The batch processing chain loops back with nextBatch(sib) or equivalent",
+        "Uses .onDone() to set the completion handler",
+        "The pattern is: sib.onEachBatch(processNode.to(nextBatch(sib))).onDone(notifyNode)",
+        "Workflow includes a trigger node",
+        "Workflow is validated successfully"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a Code node using the SDK's runOnceForAllItems helper that calculates the sum and average of a 'value' field across all input items. Include proper output declarations for testing.",
+      "expected_output": "A Code node using runOnceForAllItems() with proper context access ($input.all()), spread into node parameters, and output declarations matching the expected output shape.",
+      "files": [],
+      "expectations": [
+        "Uses import { runOnceForAllItems } from '@n8n/workflow-sdk'",
+        "Defines the code config with runOnceForAllItems<OutputType>((ctx) => { ... })",
+        "Accesses all items via ctx.$input.all()",
+        "Calculates sum and average from the items",
+        "Returns array format: [{ json: { sum: ..., average: ... } }]",
+        "Spreads the result into node config: parameters: { ...codeConfig, language: 'javaScript' }",
+        "Includes output declaration matching the expected output shape",
+        "The Code node uses type 'n8n-nodes-base.code' with version 2"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Take this n8n workflow JSON and convert it to SDK code, then parse it back to JSON and validate both versions match. Show me the complete round-trip process.",
+      "expected_output": "Demonstrates the full round-trip: generateWorkflowCode() to convert JSON to code, parseWorkflowCode() to convert back, and validation of both versions.",
+      "files": [],
+      "expectations": [
+        "Uses generateWorkflowCode(originalJSON) to convert JSON to code",
+        "Displays or explains the generated code",
+        "Uses parseWorkflowCode(code) to convert code back to JSON",
+        "Alternatively uses parseWorkflowCodeToBuilder(code) for validation before JSON export",
+        "Validates both the original and round-tripped versions with validateWorkflow()",
+        "Compares the two JSONs (node count, connection structure)",
+        "Explains that round-tripping preserves the workflow structure"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Create a workflow with a Switch node that routes items to different handlers based on a 'category' field. Category 'email' goes to a Gmail node, 'slack' goes to a Slack node, and 'webhook' goes to an HTTP POST. All branches merge at the end.",
+      "expected_output": "A workflow using the Switch node's fluent API (.onCase()), three branches, and a merge node for convergence.",
+      "files": [],
+      "expectations": [
+        "Creates a Switch node with type 'n8n-nodes-base.switch'",
+        "Configures rules for three cases in the Switch parameters",
+        "Uses .onCase(0, emailHandler).onCase(1, slackHandler).onCase(2, webhookHandler)",
+        "Each handler is a properly configured node (Gmail, Slack, HTTP)",
+        "Uses a merge node to combine all branches",
+        "Uses .to() on the SwitchCaseBuilder to chain the merge",
+        "Workflow is validated and all branches are connected"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Build a workflow with proper error handling. The main HTTP request should have an error handler that logs the error and sends an alert. Use the onError configuration and node-level error routing.",
+      "expected_output": "A workflow where the HTTP node has onError: 'continueErrorOutput' and .onError(errorHandler) connecting to an error handling chain.",
+      "files": [],
+      "expectations": [
+        "Creates an HTTP node with onError: 'continueErrorOutput' in config",
+        "Creates an error handler node (e.g., Set node for error logging)",
+        "Uses .onError(errorHandler) on the HTTP node to set the error route",
+        "The error handler is also added to the workflow with .add(errorHandler)",
+        "The main flow continues normally after the HTTP node",
+        "Optionally chains the error handler to an alert/notification node",
+        "Workflow validates without DISCONNECTED_NODE errors"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "I want to validate a workflow and handle all possible validation errors properly. Show me how to use validateWorkflow() with different options and how to interpret and fix each type of error.",
+      "expected_output": "A comprehensive validation example showing all validation options, error code interpretation, and fix strategies for common errors.",
+      "files": [],
+      "expectations": [
+        "Uses validateWorkflow(wf, options) with explicit options",
+        "Shows allowDisconnectedNodes, allowNoTrigger, validateSchema, strictMode options",
+        "Iterates over result.errors and result.warnings",
+        "Checks error.code, error.message, error.nodeName, error.parameterName",
+        "Shows how to handle specific error codes (MISSING_TRIGGER, DISCONNECTED_NODE, etc.)",
+        "Demonstrates the difference between errors (fatal) and warnings (non-fatal)",
+        "Shows the fix-and-revalidate pattern for iterative correction",
+        "Mentions key error codes: NO_NODES, MISSING_TRIGGER, DISCONNECTED_NODE, INVALID_CONNECTION, FROM_AI_IN_NON_TOOL"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Create a workflow with expressions. Use serializeExpression() to reference other nodes' output, expr() for template strings, and environment variables. The workflow should demonstrate at least 5 different expression patterns.",
+      "expected_output": "A workflow showcasing diverse expression usage: serializeExpression for property access, expr for templates, environment variables, node references, and conditional expressions.",
+      "files": [],
+      "expectations": [
+        "Uses serializeExpression($ => $.json.someField) for basic property access",
+        "Uses serializeExpression($ => $('NodeName').json.field) for cross-node references",
+        "Uses serializeExpression($ => $.env.VARIABLE) for environment variables",
+        "Uses expr('{{ ... }}') for complex expressions or string templates",
+        "Shows at least 5 different expression patterns",
+        "Expressions are used in node parameters (url, body, headers, etc.)",
+        "The workflow is valid and expressions are correctly formatted"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Create a reusable workflow pattern using the SDK that takes an existing JSON workflow, adds sticky notes for documentation, generates pin data for all HTTP nodes, and exports the enhanced workflow.",
+      "expected_output": "A pattern that loads JSON, adds sticky notes with sticky(), generates pin data for test data, and exports the enhanced version.",
+      "files": [],
+      "expectations": [
+        "Uses workflow.fromJSON() or generateWorkflowCode() to load existing workflow",
+        "Uses sticky() to create documentation notes",
+        "Sticky notes are positioned around relevant nodes using sticky('text', [node1, node2])",
+        "Adds output declarations to HTTP nodes for test data",
+        "Uses .generatePinData() to create mock data",
+        "Validates the enhanced workflow",
+        "Exports with .toJSON()"
+      ]
+    }
+  ]
+}
