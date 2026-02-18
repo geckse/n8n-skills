@@ -534,56 +534,86 @@ const wf = workflow('multi-branch', 'Multi-Branch')
 
 ## Looking Up Node Types — CRITICAL
 
-**NEVER guess or invent node type strings.** Always look up the real type and version from the n8n registry.
+**NEVER guess or invent node type strings.** Always look up the real type and version from the cached node registry.
 
-### Official Nodes: `GET https://api.n8n.io/api/nodes`
+### Local Registry Cache (Primary Source)
 
-Returns all built-in n8n nodes. Use `attributes.name` as the `type` and `attributes.version` as the `version` in `node()` / `trigger()`.
+This skill ships with cached copies of the n8n node registries. **Read these files to look up node types** — no network requests needed:
 
-**Response structure:**
+- **`references/node-registry-official.json`** — Index of all built-in n8n nodes (556+)
+- **`references/node-registry-community.json`** — Index of community-contributed nodes (25+)
+- **`references/node-registry-properties.jsonl`** — Full node properties/parameters (one JSON line per node)
+
+#### Index files — for finding the right node
+
+**Official node entry structure:**
 ```json
 {
-  "data": [
-    {
-      "id": 1242,
-      "attributes": {
-        "name": "n8n-nodes-base.slack",        // ← Use this as `type`
-        "displayName": "Slack",
-        "version": 2.2,                         // ← Use this as `version`
-        "description": "Send messages to Slack",
-        "group": "transform"
-      }
-    }
-  ]
+  "name": "n8n-nodes-base.slack",        // ← Use this as `type`
+  "displayName": "Slack",
+  "version": 2,                           // ← Use this as `version`
+  "description": "Consume Slack API",
+  "group": "[\"output\"]",
+  "alias": ["message", "chat"],
+  "categories": ["Communication", "HITL"]
 }
 ```
 
-**How to search:** Fetch the full list and filter by `attributes.displayName` or `attributes.name` containing the service name.
-
-### Community Nodes: `GET https://api.n8n.io/api/community-nodes`
-
-Returns community-contributed nodes. Use `attributes.nodeDescription.name` as the `type`.
-
-**Response structure:**
+**Community node entry structure:**
 ```json
 {
-  "data": [
-    {
-      "id": 456,
-      "attributes": {
-        "packageName": "@mendable/n8n-nodes-firecrawl",  // ← User must install this
-        "nodeDescription": {
-          "name": "@mendable/n8n-nodes-firecrawl.firecrawl",  // ← Use this as `type`
-          "displayName": "Firecrawl",
-          "version": 2,                                        // ← Use this as `version`
-          "description": "Scrape websites using Firecrawl API"
-        },
-        "isOfficialNode": true
-      }
-    }
-  ]
+  "name": "@mendable/n8n-nodes-preview-firecrawl.firecrawl",  // ← Use this as `type`
+  "displayName": "Firecrawl",
+  "packageName": "@mendable/n8n-nodes-firecrawl",              // ← User must install this
+  "version": 1,
+  "description": "Scrape websites using Firecrawl API",
+  "isOfficialNode": true
 }
 ```
+
+**How to search:** Read the JSON index and search for nodes by `displayName`, `name`, `alias`, or `description`.
+
+#### Properties file — for configuring a node correctly
+
+Once you know the node `name` from the index, **grep the properties file** to get its available parameters:
+
+```bash
+grep 'n8n-nodes-base.slack' references/node-registry-properties.jsonl
+```
+
+Each line is a JSON object with this structure:
+```json
+{"node": "n8n-nodes-base.slack", "properties": [
+  {"name": "resource", "type": "options", "default": "message", "options": [
+    {"name": "Channel", "value": "channel"},
+    {"name": "Message", "value": "message"}, ...
+  ]},
+  {"name": "operation", "type": "options", "default": "post", "displayOptions": {"show": {"resource": ["message"]}}, ...},
+  {"name": "text", "type": "string", "required": true, "description": "The message text to post", ...},
+  ...
+]}
+```
+
+Property fields:
+- `name` — Parameter name to use in `parameters: { ... }`
+- `type` — `"string"`, `"options"`, `"boolean"`, `"number"`, `"collection"`, etc.
+- `default` — Default value
+- `required` — Whether the parameter is required
+- `options` — Available choices for `"options"` type (each with `name` and `value`)
+- `description` — What the parameter does
+- `displayOptions` — Conditional visibility (`{"show": {"resource": ["message"]}}` means this param only applies when `resource` is `"message"`)
+
+### Refreshing the Cache
+
+If a node can't be found in the cached registries (they may be outdated), **run the refresh script** to pull the latest data:
+
+```bash
+bash scripts/refresh-node-registry.sh
+```
+
+This fetches from `https://api.n8n.io/api/nodes` and `https://api.n8n.io/api/community-nodes`, strips heavy fields, and updates all three cache files.
+
+### Community Node Warning
 
 **When using community nodes**, the user must install the npm package in their n8n instance first. **Always add a `sticky()` note** to the workflow:
 
@@ -608,11 +638,13 @@ If the workflow uses **multiple community packages**, list them all in one stick
 ### Lookup Order
 
 1. User asks for a node (e.g., "Slack", "Notion", "Firecrawl")
-2. Fetch `https://api.n8n.io/api/nodes` → search by name
-3. If found → use `attributes.name` and `attributes.version`
-4. If NOT found → fetch `https://api.n8n.io/api/community-nodes` → search by name
+2. Read `references/node-registry-official.json` → search by displayName/name
+3. If found → use `name` and `version`
+4. If NOT found → read `references/node-registry-community.json` → search by displayName/name
 5. If found in community → use the type + add a `sticky()` note with the `packageName`
-6. If NOT found anywhere → tell the user the node doesn't exist, do not invent one
+6. Grep `references/node-registry-properties.jsonl` for the node name → get its available parameters
+7. If NOT found in cache → run `bash scripts/refresh-node-registry.sh` to update, then search again
+8. If NOT found anywhere → tell the user the node doesn't exist, do not invent one
 
 ### Core Utility Nodes (Safe Without Lookup)
 

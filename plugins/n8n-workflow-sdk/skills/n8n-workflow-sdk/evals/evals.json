@@ -192,10 +192,10 @@
     {
       "id": 13,
       "prompt": "Build a workflow that receives a webhook, sends a message to Slack, creates a row in Google Sheets, and then sends a confirmation email via Gmail.",
-      "expected_output": "A workflow that uses the correct node types for Slack, Google Sheets, and Gmail — looked up from the n8n node registry API, not guessed.",
+      "expected_output": "A workflow that uses the correct node types for Slack, Google Sheets, and Gmail — looked up from the cached node registry, not guessed.",
       "files": [],
       "expectations": [
-        "The skill fetches https://api.n8n.io/api/nodes to look up the real node types",
+        "The skill reads references/node-registry-official.json to look up the real node types",
         "The Slack node uses the exact type from the registry (e.g., 'n8n-nodes-base.slack'), NOT a made-up type",
         "The Google Sheets node uses the exact type from the registry, NOT a made-up type",
         "The Gmail node uses the exact type from the registry, NOT a made-up type",
@@ -211,8 +211,8 @@
       "expected_output": "A workflow that looks up Firecrawl in the community nodes registry, uses the correct type, and adds a sticky note warning about the required community node package.",
       "files": [],
       "expectations": [
-        "The skill first searches https://api.n8n.io/api/nodes for Firecrawl",
-        "When not found in official nodes, searches https://api.n8n.io/api/community-nodes",
+        "The skill first reads references/node-registry-official.json to search for Firecrawl",
+        "When not found in official nodes, reads references/node-registry-community.json",
         "Uses the exact type from the community registry for Firecrawl",
         "Adds a sticky() note warning the user to install the community package",
         "The sticky note mentions the exact packageName (npm package) from the registry",

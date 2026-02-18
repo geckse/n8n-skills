@@ -18,6 +18,9 @@ This skill uses progressive disclosure. The SKILL.md covers the full workflow, d
 - `references/validation-and-testing.md` — Workflow validation, pin data, test data generation, and testing strategies
 - `references/code-generation.md` — JSON-to-code, code-to-JSON, parseWorkflowCode, and the generation pipeline
 - `references/plugins-and-advanced.md` — Plugin system, type generation, Zod schemas, and extensibility
+- `references/node-registry-official.json` — Cached registry of all 556 official n8n nodes (name, version, description)
+- `references/node-registry-community.json` — Cached registry of community nodes (name, version, packageName)
+- `references/node-registry-properties.jsonl` — Node properties/parameters (one JSON line per node, grep for a specific node)
 
 Read the appropriate reference file before writing any code.
 
@@ -53,35 +56,57 @@ The SDK is a pure TypeScript/JavaScript library — no build step is required. `
 
 **DO NOT invent or guess node type identifiers.** n8n has hundreds of nodes, each with a specific `type` string (e.g., `n8n-nodes-base.slack`). Using a wrong or made-up type produces a workflow that fails in n8n.
 
-**Always look up the real node type** from the official n8n node registry before using it:
+**Always look up the real node type** from the cached node registry before using it.
 
-### Official Nodes Registry
+### Local Registry Cache (Primary Source)
+
+This skill ships with cached copies of the n8n node registries. **Read these files to look up node types** — no network requests needed:
+
+- **`references/node-registry-official.json`** — Index of all 556 built-in n8n nodes (name, version, description)
+- **`references/node-registry-community.json`** — Index of community-contributed nodes (name, version, packageName)
+- **`references/node-registry-properties.jsonl`** — Full node properties/parameters (one JSON line per node)
+
+#### Index files (for finding the right node)
+
+Each official node entry has:
+- `name` — The **node type identifier** to use in `node()` / `trigger()` (e.g., `"n8n-nodes-base.slack"`)
+- `displayName` — Human-readable name (e.g., `"Slack"`)
+- `version` — Current version number
+- `description` — What the node does
+- `group` — `"[\"trigger\"]"` or other classification
+- `alias` — Alternative names for search (e.g., `["message", "chat"]`)
+- `categories` — Node categories (e.g., `["Communication"]`)
+
+Each community node entry has:
+- `name` — The **node type identifier**
+- `displayName` — Human-readable name
+- `packageName` — The **npm package** the user must install (e.g., `"@mendable/n8n-nodes-firecrawl"`)
+- `version` — Version number
+- `isOfficialNode` — Whether verified by n8n
+
+**How to find a node:** Read the appropriate registry JSON index and search for the node by `displayName`, `name`, `alias`, or `description`.
+
+#### Properties file (for configuring a node)
+
+Once you've found a node's `name` in the index, **grep the properties file** to get its available parameters:
 
 ```
-GET https://api.n8n.io/api/nodes
+grep 'n8n-nodes-base.slack' references/node-registry-properties.jsonl
 ```
 
-Returns all built-in n8n nodes. Each entry has:
-- `attributes.name` — The **node type identifier** to use in `node()` / `trigger()` (e.g., `"n8n-nodes-base.slack"`, `"@n8n/n8n-nodes-langchain.agent"`)
-- `attributes.displayName` — Human-readable name
-- `attributes.version` — Current version number
-- `attributes.description` — What the node does
-- `attributes.group` — `"trigger"` or other classification
+Each line is a JSON object: `{"node": "n8n-nodes-base.slack", "properties": [...]}` where `properties` contains the node's parameter definitions — field names, types, defaults, options, required flags, and conditional display rules. Use this to correctly configure the `parameters` object in `node()` / `trigger()`.
 
-**How to find a node:** Fetch the registry and search for the node by display name or description. For example, to find the Slack node, search for entries where `attributes.displayName` or `attributes.name` contains "Slack" or "slack".
+### Refreshing the Cache
 
-### Community Nodes Registry
+If a node can't be found in the cached registries (they may be outdated), **run the refresh script** to pull the latest data from the live APIs:
 
-```
-GET https://api.n8n.io/api/community-nodes
+```bash
+bash scripts/refresh-node-registry.sh
 ```
 
-Returns community-contributed nodes. Each entry has:
-- `attributes.nodeDescription.name` — The **node type identifier**
-- `attributes.packageName` — The **npm package** the user must install (e.g., `"@mendable/n8n-nodes-firecrawl"`)
-- `attributes.nodeDescription.displayName` — Human-readable name
-- `attributes.nodeDescription.version` — Version number
-- `attributes.isOfficialNode` — Whether verified by n8n
+This fetches from `https://api.n8n.io/api/nodes` and `https://api.n8n.io/api/community-nodes`, strips heavy fields, and updates all three cache files. Run this when you suspect the cache is stale or when a user asks for a node that should exist but isn't in the cache.
+
+### Community Node Warning
 
 **When using a community node**, the user must install the npm package in their n8n instance first. **Always add a `sticky()` note** to the workflow warning about the required community node package:
 
@@ -96,11 +121,13 @@ const installNote = sticky(
 ### Lookup Workflow
 
 1. **User asks for a specific integration** (e.g., "add a Slack node")
-2. **Fetch `https://api.n8n.io/api/nodes`** and search for the matching node
-3. **If not found in official nodes**, fetch `https://api.n8n.io/api/community-nodes` and search there
-4. **Use the exact `type` and `version`** from the registry in your `node()` / `trigger()` call
-5. **If using a community node**, add a `sticky()` note listing the required npm package
-6. **If no matching node exists**, tell the user — do not invent a type
+2. **Read `references/node-registry-official.json`** and search for the matching node
+3. **If not found in official nodes**, read `references/node-registry-community.json` and search there
+4. **If still not found**, run `bash scripts/refresh-node-registry.sh` to update the cache, then search again
+5. **Use the exact `name` and `version`** from the registry in your `node()` / `trigger()` call
+6. **Grep `references/node-registry-properties.jsonl`** for the node name to get its available parameters and configure it correctly
+7. **If using a community node**, add a `sticky()` note listing the required npm package
+8. **If no matching node exists anywhere**, tell the user — do not invent a type
 
 ### Quick Reference: Core Utility Nodes
 
@@ -125,7 +152,7 @@ These fundamental utility nodes are always safe to use without a registry lookup
 | `n8n-nodes-base.executeWorkflow` | Execute sub-workflow |
 | `@n8n/n8n-nodes-langchain.agent` | AI Agent |
 
-**For ANY integration node not in this list** (Slack, Gmail, Notion, Airtable, Google Sheets, Postgres, etc.), you MUST look up the correct `type` and `version` from the registry API before using it.
+**For ANY integration node not in this list** (Slack, Gmail, Notion, Airtable, Google Sheets, Postgres, etc.), you MUST look up the correct `type` and `version` from the registry cache before using it.
 
 ## Core Concepts
 
@@ -347,7 +374,7 @@ const wf = workflow('ai-workflow', 'AI Agent Workflow')
 ### When to Use Each Pattern
 
 **Creating a brand-new workflow:**
-1. **Look up node types** — Fetch `https://api.n8n.io/api/nodes` (and `/community-nodes` if needed) to get the correct `type` and `version` for every integration node
+1. **Look up node types** — Read `references/node-registry-official.json` (and `references/node-registry-community.json` if needed) to get the correct `type` and `version` for every integration node
 2. Design the flow (trigger → processing → output)
 3. Create nodes with `node()` and `trigger()` using the real types from the registry
 4. If using community nodes, add `sticky()` notes listing required npm packages
@@ -472,7 +499,7 @@ This skill is for **building and manipulating n8n workflows programmatically** u
 
 ## Best Practices
 
-1. **NEVER guess node types — always look them up** — Fetch `https://api.n8n.io/api/nodes` (official) or `https://api.n8n.io/api/community-nodes` (community) to get the real `type` and `version`. A made-up node type produces a broken workflow. See the "Node Type Lookup" section above.
+1. **NEVER guess node types — always look them up** — Read `references/node-registry-official.json` (official) or `references/node-registry-community.json` (community) to get the real `type` and `version`. A made-up node type produces a broken workflow. See the "Node Type Lookup" section above.
 2. **Flag community nodes with sticky notes** — If the workflow uses community nodes, add a `sticky()` note listing the npm packages the user must install in their n8n instance.
 3. **Always validate before exporting** — Call `validateWorkflow()` before `.toJSON()`. The SDK catches 23+ error conditions that would silently produce broken workflows in n8n, so skipping validation means shipping bugs.
 4. **Use output declarations for testing** — Add `output` to node configs, then call `generatePinData()`. Without output declarations, there's no way to generate test fixtures automatically, and downstream nodes can't be tested with realistic data shapes.

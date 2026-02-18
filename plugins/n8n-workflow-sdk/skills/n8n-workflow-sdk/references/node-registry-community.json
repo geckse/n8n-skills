@@ -1,0 +1,237 @@
+{
+  "_meta": {
+    "source": "https://api.n8n.io/api/community-nodes",
+    "total": 25,
+    "description": "Cached n8n community node registry. Run scripts/refresh-node-registry.sh to update."
+  },
+  "nodes": [
+    {
+      "name": "@brightdata/n8n-nodes-preview-brightdata.brightData",
+      "displayName": "BrightData",
+      "packageName": "@brightdata/n8n-nodes-brightdata",
+      "version": 1,
+      "description": "Interact with Bright Data to scrape websites or use existing datasets from the marketplace to generate adapted snapshots",
+      "authorName": "brd-cholpon",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-cronlytic.cronlyticTrigger",
+      "displayName": "Cronlytic Trigger",
+      "packageName": "n8n-nodes-cronlytic",
+      "version": 1,
+      "description": "Trigger workflows using Cronlytic advanced cron scheduling",
+      "authorName": "cronlytic",
+      "isOfficialNode": true
+    },
+    {
+      "name": "@mendable/n8n-nodes-preview-firecrawl.firecrawl",
+      "displayName": "Firecrawl",
+      "packageName": "@mendable/n8n-nodes-firecrawl",
+      "version": 1,
+      "description": "Scrape, crawl, map, search, and extract structured data from websites using Firecrawl API",
+      "authorName": "cpeffer",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-hedy.hedy",
+      "displayName": "Hedy",
+      "packageName": "n8n-nodes-hedy",
+      "version": 1,
+      "description": "Interact with Hedy API to retrieve meeting intelligence data",
+      "authorName": "julian-hedy",
+      "isOfficialNode": true
+    },
+    {
+      "name": "@mookielianhd/n8n-nodes-preview-instagram.instagram",
+      "displayName": "Instagram",
+      "packageName": "@mookielianhd/n8n-nodes-instagram",
+      "version": 1,
+      "description": "Publish media to Instagram using Facebook Graph API",
+      "authorName": "mookielian",
+      "isOfficialNode": false
+    },
+    {
+      "name": "n8n-nodes-preview-instantly.instantly",
+      "displayName": "Instantly",
+      "packageName": "n8n-nodes-instantly",
+      "version": 1,
+      "description": "Interact with Instantly API",
+      "authorName": "bcharleson",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-itglue.iTGlue",
+      "displayName": "IT Glue",
+      "packageName": "n8n-nodes-itglue",
+      "version": 1,
+      "description": "Utilize the IT Glue API",
+      "authorName": "redanthrax",
+      "isOfficialNode": false
+    },
+    {
+      "name": "n8n-nodes-preview-keephub.keephub",
+      "displayName": "Keephub",
+      "packageName": "n8n-nodes-keephub",
+      "version": 1,
+      "description": "Interact with Keephub API",
+      "authorName": "development_keephub",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-lavatop.lavatop",
+      "displayName": "LavaTop",
+      "packageName": "n8n-nodes-lavatop",
+      "version": 1,
+      "description": "Sends data to LavaTop",
+      "authorName": "zdadco",
+      "isOfficialNode": false
+    },
+    {
+      "name": "n8n-nodes-preview-logsnag.LogSnag",
+      "displayName": "LogSnag",
+      "packageName": "n8n-nodes-logsnag",
+      "version": 1,
+      "description": "Send events and insights to LogSnag",
+      "authorName": "joff",
+      "isOfficialNode": false
+    },
+    {
+      "name": "n8n-nodes-preview-murf.murf",
+      "displayName": "Murf AI",
+      "packageName": "n8n-nodes-murf",
+      "version": 1,
+      "description": "Murf AI APIs for speech synthesis, dubbing, and audio transformation.",
+      "authorName": "nileshmurf",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-octagon.octagonAgents",
+      "displayName": "Octagon",
+      "packageName": "n8n-nodes-octagon",
+      "version": 1,
+      "description": "Financial AI agents",
+      "authorName": "octagonai",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-pagepixels-screenshots.pagePixelsScreenshots",
+      "displayName": "PagePixels Screenshots",
+      "packageName": "n8n-nodes-pagepixels-screenshots",
+      "version": 1,
+      "description": "Capture website screenshots using the PagePixels API",
+      "authorName": "pagepixels",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-parseur.parseur",
+      "displayName": "Parseur",
+      "packageName": "n8n-nodes-parseur",
+      "version": 1,
+      "description": "Interact with Parseur to upload text or files",
+      "authorName": "parseur",
+      "isOfficialNode": true
+    },
+    {
+      "name": "@pdfgeneratorapi/n8n-nodes-preview-pdf-generator-api.pdfGeneratorApi",
+      "displayName": "PDF Generator API",
+      "packageName": "@pdfgeneratorapi/n8n-nodes-pdf-generator-api",
+      "version": 1,
+      "description": "Generate PDFs, manage templates, convert HTML/URLs to PDF, and perform PDF operations like watermarking, encryption, and optimization",
+      "authorName": "bruno-farias-ar",
+      "isOfficialNode": true
+    },
+    {
+      "name": "@permitio/n8n-nodes-preview-permitio.permit",
+      "displayName": "Permit",
+      "packageName": "@permitio/n8n-nodes-permitio",
+      "version": 1,
+      "description": "Interact with Permit.io authorization service",
+      "authorName": "permit-dev-manager",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-placid.placid",
+      "displayName": "Placid",
+      "packageName": "n8n-nodes-placid",
+      "version": 1,
+      "description": "Generate images, PDFs, and videos via Placid's API",
+      "authorName": "placidapp",
+      "isOfficialNode": true
+    },
+    {
+      "name": "@nskha/n8n-nodes-preview-scrappey.scrappey",
+      "displayName": "Scrappey",
+      "packageName": "@nskha/n8n-nodes-scrappey",
+      "version": 1,
+      "description": "Make advanced web requests with anti-bot protection bypass using Scrappey API",
+      "authorName": "automations-project",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-signifycrm.signifyCrm",
+      "displayName": "SignifyCRM",
+      "packageName": "n8n-nodes-signifycrm",
+      "version": 1,
+      "description": "Consume SignifyCRM API",
+      "authorName": "signifycrm",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-supadata.supadata",
+      "displayName": "Supadata",
+      "packageName": "n8n-nodes-supadata",
+      "version": 1,
+      "description": "Access Supadata API to fetch video metadata, transcripts, and web data from multiple platforms",
+      "authorName": "rafalzawadzki",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-tallyforms.tallyTrigger",
+      "displayName": "Tally Trigger",
+      "packageName": "n8n-nodes-tallyforms",
+      "version": [
+        1,
+        2
+      ],
+      "description": "Starts the workflow on a Tally form submission",
+      "authorName": "wouterds",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-veed.veed",
+      "displayName": "VEED AI Video API",
+      "packageName": "n8n-nodes-veed",
+      "version": 1,
+      "description": "Generate AI talking videos from an image and audio file using the Veed Fabric API. Automate creation of realistic talking videos, animation videos and ai avatars directly in your n8n workflows.",
+      "authorName": "dmytrobaltak",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-vikunja.vikunja",
+      "displayName": "Vikunja",
+      "packageName": "n8n-nodes-vikunja",
+      "version": 1,
+      "description": "Get data from Vikunja's API",
+      "authorName": "kolaente",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-vikunja.vikunjaTrigger",
+      "displayName": "Vikunja Trigger",
+      "packageName": "n8n-nodes-vikunja",
+      "version": 1,
+      "description": "Starts the workflow when Vikunja events occur",
+      "authorName": "kolaente",
+      "isOfficialNode": true
+    },
+    {
+      "name": "n8n-nodes-preview-syncmate.whatsAuto",
+      "displayName": "WhatsApp Notifications by SyncMate",
+      "packageName": "n8n-nodes-syncmate",
+      "version": 1,
+      "description": "Send WhatsApp messages or media using SyncMate Assistro API",
+      "authorName": "heratassistro",
+      "isOfficialNode": true
+    }
+  ]
+}

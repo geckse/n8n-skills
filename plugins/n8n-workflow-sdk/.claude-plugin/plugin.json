@@ -1,7 +1,7 @@
 {
   "name": "n8n-workflow-sdk",
   "description": "Agent skills for building, testing, and managing n8n workflows programmatically using the @n8n/workflow-sdk. Covers workflow creation, JSON import/export, validation, code generation, and the full SDK API.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "geckse"
   }
