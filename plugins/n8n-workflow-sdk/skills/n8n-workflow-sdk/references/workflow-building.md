@@ -287,11 +287,12 @@ const transform = node({
     name: 'Format Response',
     parameters: {
       mode: 'manual',
-      fields: {
-        values: [
-          { name: 'greeting', type: 'stringValue', stringValue: expr('{{ "Hello " + $json.name }}') }
+      assignments: {
+        assignments: [
+          { name: 'greeting', value: expr('{{ "Hello " + $json.name }}'), type: 'string' }
         ]
-      }
+      },
+      options: {}
     },
     output: [{ json: { greeting: 'Hello John' } }]
   }

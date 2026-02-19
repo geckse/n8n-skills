@@ -606,12 +606,12 @@ Property fields:
 **CRITICAL: Use the option `value`, NOT the display `name`.** For `options`-type parameters, the `name` is a human-readable label shown in the n8n UI, while the `value` is what goes in the workflow JSON. These are often very different:
 
 ```
-"options": [{"name": "String", "value": "stringValue"}, ...]
-                     ^^^^^^^^              ^^^^^^^^^^^
-                     UI label              Use THIS in parameters
+"options": [{"name": "Manual Mapping", "value": "manual"}, {"name": "JSON", "value": "raw"}]
+                      ^^^^^^^^^^^^^^^^                ^^^^^^^^           ^^^^^^           ^^^^^
+                      UI label                        Use THIS           UI label         Use THIS
 ```
 
-Common traps where display name ≠ value: Set node `type` (`"String"` → `"stringValue"`), Set `mode` (`"JSON"` → `"raw"`), HTTP Request `contentType` (`"Form Urlencoded"` → `"form-urlencoded"`), Code `language` (`"Python"` → `"pythonNative"`), Webhook `responseMode` (`"Immediately"` → `"onReceived"`), Merge `mode` (`"SQL Query"` → `"combineBySql"`).
+Common traps where display name ≠ value: Set `mode` (`"JSON"` → `"raw"`), HTTP Request `contentType` (`"Form Urlencoded"` → `"form-urlencoded"`), Code `language` (`"Python"` → `"pythonNative"`), Webhook `responseMode` (`"Immediately"` → `"onReceived"`), Merge `mode` (`"SQL Query"` → `"combineBySql"`).
 
 ### Refreshing the Cache
 
@@ -695,24 +695,42 @@ These examples show **properly configured** nodes with parameters. Always grep `
 
 ### Set / Edit Fields Node
 
-The Set node (`n8n-nodes-base.set`) — displayed as "Edit Fields" in n8n — transforms data by setting, renaming, or removing fields. **Always include `parameters`** — a Set node without parameters does nothing.
+The Set node (`n8n-nodes-base.set`) — displayed as "Edit Fields" in n8n — transforms data by setting, renaming, or removing fields.
+
+**⚠️ CRITICAL: Set node v3.3+ uses `assignments`, NOT `fields`!** The parameter schema changed at v3.3. Version 3.4 (current) uses the `assignments` format shown below. The old `fields.values` / `stringValue` / `numberValue` format is for v3.0–3.2 only and **will not work** with v3.4.
+
+**🚫 ANTI-PATTERN — NEVER generate these broken formats:**
+```typescript
+// ❌ WRONG — empty Set node, does nothing:
+parameters: { options: {} }
+
+// ❌ WRONG — old v3.0-3.2 format, does NOT work with v3.4:
+parameters: { mode: 'manual', fields: { values: [{ name: 'x', type: 'stringValue', stringValue: 'y' }] } }
+```
+
+**✅ REQUIRED (v3.3+/3.4):** A Set node MUST always have EITHER:
+- `mode: 'manual'` + `assignments.assignments` array with at least one entry, OR
+- `mode: 'raw'` + `jsonOutput` string with the JSON to produce
+
+If you don't know what fields to set, ask the user. Never output a Set node with `parameters: { options: {} }`.
 
 ```typescript
-// Manual mode: set specific fields with static or expression values
+// Manual mode: set specific fields (v3.4 assignments format)
 const setNode = node({
   type: 'n8n-nodes-base.set', version: 3.4,
   config: {
     name: 'Edit Fields',
     parameters: {
       mode: 'manual',
-      fields: {
-        values: [
-          { name: 'fullName', type: 'stringValue', stringValue: '={{ $json.firstName + " " + $json.lastName }}' },
-          { name: 'isActive', type: 'booleanValue', booleanValue: true },
-          { name: 'score', type: 'numberValue', numberValue: 100 }
+      assignments: {
+        assignments: [
+          { name: 'fullName', value: '={{ $json.firstName + " " + $json.lastName }}', type: 'string' },
+          { name: 'isActive', value: true, type: 'boolean' },
+          { name: 'score', value: 100, type: 'number' }
         ]
       },
-      include: 'all'  // 'all' | 'none' | 'selected' | 'except'
+      includeOtherFields: true,  // true = pass through all input fields alongside new ones
+      options: {}
     }
   }
 })
@@ -724,35 +742,42 @@ const setJsonNode = node({
     name: 'Custom Output',
     parameters: {
       mode: 'raw',
-      jsonOutput: '{ "status": "processed", "timestamp": "={{ $now.toISOString() }}" }'
+      jsonOutput: '{ "status": "processed", "timestamp": "={{ $now.toISOString() }}" }',
+      options: {}
     }
   }
 })
 
-// Only keep certain fields from input
-const filterFieldsNode = node({
+// Set fields WITHOUT passing through input fields (includeOtherFields defaults to false)
+const onlyNewFieldsNode = node({
   type: 'n8n-nodes-base.set', version: 3.4,
   config: {
-    name: 'Keep Only Name and Email',
+    name: 'Only New Fields',
     parameters: {
       mode: 'manual',
-      fields: { values: [] },
-      include: 'selected',
-      includeFields: 'name,email'
+      assignments: {
+        assignments: [
+          { name: 'name', value: '={{ $json.name }}', type: 'string' },
+          { name: 'email', value: '={{ $json.email }}', type: 'string' }
+        ]
+      },
+      options: {}
     }
   }
 })
 ```
 
-**Field value types in `fields.values`:**
+**Assignment entry format (v3.4):**
 
-| `type` | Value Property | Example |
-|--------|---------------|---------|
-| `'stringValue'` | `stringValue` | `{ name: 'greeting', type: 'stringValue', stringValue: 'Hello' }` |
-| `'numberValue'` | `numberValue` | `{ name: 'count', type: 'numberValue', numberValue: 42 }` |
-| `'booleanValue'` | `booleanValue` | `{ name: 'active', type: 'booleanValue', booleanValue: true }` |
-| `'arrayValue'` | `arrayValue` | `{ name: 'items', type: 'arrayValue', arrayValue: '=[]' }` |
-| `'objectValue'` | `objectValue` | `{ name: 'data', type: 'objectValue', objectValue: '={}' }` |
+Each entry in `assignments.assignments` has three fields:
+
+| Property | Description | Example |
+|----------|-------------|---------|
+| `name` | Field name to set | `'fullName'` |
+| `value` | The value (static or expression) | `'={{ $json.first }}'`, `42`, `true` |
+| `type` | `'string'`, `'number'`, or `'boolean'` | `'string'` |
+
+**Include behavior (v3.4):** Set `includeOtherFields: true` to pass through all input fields alongside the new/modified ones. When `false` (default), only the explicitly assigned fields appear in the output. When `includeOtherFields` is `true`, you can optionally add `include` (`'all'` | `'selected'` | `'except'`) with `includeFields` or `excludeFields` to fine-tune which input fields pass through.
 
 ### HTTP Request Node
 

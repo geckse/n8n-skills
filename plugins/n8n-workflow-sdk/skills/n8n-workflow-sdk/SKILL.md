@@ -96,16 +96,17 @@ grep 'n8n-nodes-base.slack' references/node-registry-properties.jsonl
 
 Each line is a JSON object: `{"node": "n8n-nodes-base.slack", "properties": [...]}` where `properties` contains the node's parameter definitions — field names, types, defaults, options, required flags, and conditional display rules. Use this to correctly configure the `parameters` object in `node()` / `trigger()`.
 
-**CRITICAL: Use option `value`, not display `name`.** For `options`-type parameters, the properties JSONL lists both a display `name` (what the UI shows) and the actual `value` (what goes in the workflow JSON). These are often different — you **must** use the `value`. For example, the Set node's field type options have display name `"String"` but value `"stringValue"`. Common traps:
+**CRITICAL: Use option `value`, not display `name`.** For `options`-type parameters, the properties JSONL lists both a display `name` (what the UI shows) and the actual `value` (what goes in the workflow JSON). These are often different — you **must** use the `value`. Common traps:
 
 | Node | Parameter | Display Name | Actual Value |
 |------|-----------|-------------|--------------|
-| Set | `fields.values[].type` | `String` | `stringValue` |
 | Set | `mode` | `JSON` | `raw` |
 | HTTP Request | `contentType` | `Form Urlencoded` | `form-urlencoded` |
 | Code | `language` | `Python` | `pythonNative` |
 | Webhook | `responseMode` | `Immediately` | `onReceived` |
 | Merge | `mode` | `SQL Query` | `combineBySql` |
+
+**CRITICAL: Set node v3.3+/3.4 uses `assignments`, NOT `fields`.** The parameter schema changed at v3.3. If you're using Set node v3.4, you MUST use `assignments.assignments` (with `type: 'string'`/`'number'`/`'boolean'` and a single `value` field). The old `fields.values` / `stringValue` / `numberValue` format is for v3.0–3.2 only. See `nodes-and-connections.md` for full examples.
 
 #### Deriving version hints from properties data
 
@@ -172,7 +173,7 @@ These fundamental utility node **type names** are always safe to use without a r
 | `n8n-nodes-base.webhook` | HTTP webhook trigger |
 | `n8n-nodes-base.scheduleTrigger` | Cron/interval trigger |
 | `n8n-nodes-base.httpRequest` | Generic HTTP request |
-| `n8n-nodes-base.set` | Set/transform data fields |
+| `n8n-nodes-base.set` | Set/transform data fields (v3.4 uses `assignments` format — never `fields.values` or `{ options: {} }`) |
 | `n8n-nodes-base.code` | Custom JavaScript/Python code |
 | `n8n-nodes-base.if` | Conditional branching |
 | `n8n-nodes-base.switch` | Multi-branch routing |
@@ -248,13 +249,14 @@ const newNode = node({
     name: 'Transform',
     parameters: {
       mode: 'manual',
-      fields: {
-        values: [
-          { name: 'processed', type: 'booleanValue', booleanValue: true },
-          { name: 'label', type: 'stringValue', stringValue: '={{ $json.name }}' }
+      assignments: {
+        assignments: [
+          { name: 'processed', value: true, type: 'boolean' },
+          { name: 'label', value: '={{ $json.name }}', type: 'string' }
         ]
       },
-      include: 'all'
+      includeOtherFields: true,
+      options: {}
     }
   }
 })
@@ -558,3 +560,4 @@ This skill is for **building and manipulating n8n workflows programmatically** u
 10. **Use `expr()` for dynamic values** — Raw strings with `={{ }}` are error-prone (missing `=` prefix, unbalanced braces). `expr()` handles the prefix automatically and makes intent clear in code.
 11. **Set `output` on nodes to enable pin data generation** — This is how you create test fixtures. Without declared outputs, `generatePinData()` has nothing to convert.
 12. **Use `sticky()` for workflow documentation** — Auto-positions around given nodes, making it easy to annotate sections of complex workflows for other developers.
+13. **NEVER generate empty Set nodes** — A Set node with `parameters: { options: {} }` is broken and does nothing. Every Set node v3.4 MUST have `mode: 'manual'` with `assignments.assignments` containing at least one entry, OR `mode: 'raw'` with a `jsonOutput` string. Use `type: 'string'`/`'number'`/`'boolean'` and a single `value` field — NOT the old `stringValue`/`numberValue` format. If you don't know what fields to set, ask the user.

@@ -305,7 +305,7 @@ const errorHandler = node({
   type: 'n8n-nodes-base.set', version: 3.4,
   config: {
     name: 'Handle Error',
-    parameters: { mode: 'manual', fields: { values: [{ name: 'error', type: 'booleanValue', booleanValue: true }] } }
+    parameters: { mode: 'manual', assignments: { assignments: [{ name: 'error', value: true, type: 'boolean' }] }, options: {} }
   }
 })
 
