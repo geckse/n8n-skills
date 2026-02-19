@@ -26,19 +26,22 @@ const ifNode = node({
     name: 'Check Status',
     parameters: {
       conditions: {
-        options: { caseSensitive: true, leftValue: '' },
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 },
+        combinator: 'and',
         conditions: [{
+          id: 'status-check',
           leftValue: '={{ $json.status }}',
           rightValue: 'active',
           operator: { type: 'string', operation: 'equals' }
         }]
-      }
+      },
+      options: {}
     }
   }
 })
 
-const trueNode = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Active Path' } })
-const falseNode = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Inactive Path' } })
+const trueNode = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Active Path' } })
+const falseNode = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Inactive Path' } })
 const endNode = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Continue' } })
 
 // Fluent API: .onTrue() and .onFalse() on the IF node
@@ -113,19 +116,44 @@ const switchNode = node({
     name: 'Route by Type',
     parameters: {
       rules: {
-        rules: [
-          { outputKey: 'typeA', conditions: { conditions: [{ leftValue: '={{ $json.type }}', rightValue: 'A', operator: { type: 'string', operation: 'equals' } }] } },
-          { outputKey: 'typeB', conditions: { conditions: [{ leftValue: '={{ $json.type }}', rightValue: 'B', operator: { type: 'string', operation: 'equals' } }] } },
-          { outputKey: 'typeC', conditions: { conditions: [{ leftValue: '={{ $json.type }}', rightValue: 'C', operator: { type: 'string', operation: 'equals' } }] } }
+        values: [
+          {
+            outputKey: 'typeA',
+            renameOutput: true,
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict', version: 2 },
+              combinator: 'and',
+              conditions: [{ id: 'rule-a', leftValue: '={{ $json.type }}', rightValue: 'A', operator: { type: 'string', operation: 'equals' } }]
+            }
+          },
+          {
+            outputKey: 'typeB',
+            renameOutput: true,
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict', version: 2 },
+              combinator: 'and',
+              conditions: [{ id: 'rule-b', leftValue: '={{ $json.type }}', rightValue: 'B', operator: { type: 'string', operation: 'equals' } }]
+            }
+          },
+          {
+            outputKey: 'typeC',
+            renameOutput: true,
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict', version: 2 },
+              combinator: 'and',
+              conditions: [{ id: 'rule-c', leftValue: '={{ $json.type }}', rightValue: 'C', operator: { type: 'string', operation: 'equals' } }]
+            }
+          }
         ]
-      }
+      },
+      options: { fallbackOutput: 'extra' }  // 'extra' adds a fallback output, 'none' drops unmatched
     }
   }
 })
 
-const caseA = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Handle A' } })
-const caseB = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Handle B' } })
-const caseC = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Handle C' } })
+const caseA = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Handle A' } })
+const caseB = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Handle B' } })
+const caseC = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Handle C' } })
 const converge = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Continue' } })
 
 const wf = workflow('id', 'Switch Example')
@@ -271,10 +299,10 @@ processNode.to(sib.sibNode)  // Direct access
 ```typescript
 const sib = splitInBatches({ version: 3, config: { parameters: { batchSize: 5 } } })
 
-const fetch = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Fetch', parameters: { url: '...' } } })
-const transform = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Transform' } })
-const save = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Save', parameters: { method: 'POST', url: '...' } } })
-const report = node({ type: 'n8n-nodes-base.set', version: 3.4, config: { name: 'Report' } })
+const fetch = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Fetch', parameters: { url: '...', options: {} } } })
+const transform = node({ type: 'n8n-nodes-base.code', version: 2, config: { name: 'Transform', parameters: { jsCode: 'return items.map(item => ({ json: { ...item.json, processed: true } }))' } } })
+const save = node({ type: 'n8n-nodes-base.httpRequest', version: 4.4, config: { name: 'Save', parameters: { url: '...', method: 'POST', sendBody: true, specifyBody: 'json', jsonBody: '={{ JSON.stringify($json) }}', options: {} } } })
+const report = node({ type: 'n8n-nodes-base.noOp', version: 1, config: { name: 'Report' } })
 
 const sibBuilder = sib
   .onEachBatch(
@@ -344,11 +372,17 @@ const checkType = node({
   config: {
     name: 'Is Bulk?',
     parameters: {
-      conditions: { conditions: [{
-        leftValue: '={{ $json.items.length }}',
-        rightValue: '10',
-        operator: { type: 'number', operation: 'gt' }
-      }] }
+      conditions: {
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 },
+        combinator: 'and',
+        conditions: [{
+          id: 'bulk-check',
+          leftValue: '={{ $json.items.length }}',
+          rightValue: '10',
+          operator: { type: 'number', operation: 'gt' }
+        }]
+      },
+      options: {}
     }
   }
 })

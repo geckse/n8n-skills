@@ -440,7 +440,10 @@ import {
 const model = languageModel({
   type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', version: 1.3,
   config: {
-    parameters: { model: 'gpt-4o' },
+    parameters: {
+      model: { __rl: true, mode: 'list', value: 'gpt-4o', cachedResultName: 'gpt-4o' },
+      options: {}
+    },
     credentials: { openAiApi: { name: 'OpenAI', id: 'cred-123' } }
   }
 })
@@ -463,7 +466,11 @@ const agent = node({
   type: '@n8n/n8n-nodes-langchain.agent', version: 3.1,
   config: {
     name: 'Research Agent',
-    parameters: { promptType: 'define', text: 'You are a research assistant.' },
+    parameters: {
+      promptType: 'define',
+      text: '={{ $json.chatInput }}',
+      options: { systemMessage: 'You are a research assistant.' }
+    },
     subnodes: { model, tools: [searchTool] }
   }
 })

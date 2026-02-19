@@ -201,9 +201,8 @@ const openai = languageModel({
   version: 1.3,
   config: {
     parameters: {
-      model: 'gpt-4o',
-      temperature: 0.7,
-      maxTokens: 2048
+      model: { __rl: true, mode: 'list', value: 'gpt-4o-mini', cachedResultName: 'gpt-4o-mini' },
+      options: {}
     },
     credentials: { openAiApi: { name: 'OpenAI', id: 'cred-123' } }
   }
@@ -213,11 +212,24 @@ const anthropic = languageModel({
   type: '@n8n/n8n-nodes-langchain.lmChatAnthropic',
   version: 1.3,
   config: {
-    parameters: { model: 'claude-sonnet-4-5-20250929' },
+    parameters: {
+      model: { __rl: true, mode: 'list', value: 'claude-sonnet-4-20250514', cachedResultName: 'Claude 4 Sonnet' },
+      options: {}
+    },
     credentials: { anthropicApi: { name: 'Anthropic', id: 'cred-456' } }
   }
 })
 ```
+
+**⚠️ IMPORTANT: Resource Locator (`__rl`) format.** Newer n8n node versions (v1.2+) use a "resource locator" object for model selection and similar dropdown parameters, instead of a plain string. The format is:
+
+```typescript
+{ __rl: true, mode: 'list', value: 'model-id', cachedResultName: 'Display Name' }
+```
+
+This applies to LLM model parameters (`lmChatOpenAi`, `lmChatAnthropic`, `lmChatGoogleGemini`, etc.). For older node versions (v1/v1.1), a plain string like `model: 'gpt-4o'` may still work, but v1.2+ expects the `__rl` format.
+
+**⚠️ IMPORTANT: Use current models, not the ones in these examples.** The model IDs shown here (e.g., `gpt-4o-mini`, `claude-sonnet-4-20250514`) are illustrative and will become outdated. Always select the most appropriate **current** model for the user's use case — check the provider's latest model offerings. Do NOT blindly copy model IDs from these examples.
 
 ### Memory: `memory()`
 
@@ -375,7 +387,11 @@ const agent = node({
     name: 'AI Agent',
     parameters: {
       promptType: 'define',
-      text: 'You are a helpful assistant.'
+      text: '={{ $json.chatInput }}',         // User prompt (often an expression from input)
+      hasOutputParser: true,                   // Set to true when outputParser subnode is connected
+      options: {
+        systemMessage: 'You are a helpful assistant. Be concise and accurate.'
+      }
     },
     subnodes: {
       model: openai,                        // Single subnode
@@ -789,20 +805,19 @@ const getNode = node({
     name: 'Fetch Data',
     parameters: {
       url: 'https://api.example.com/users',
-      method: 'GET',
-      authentication: 'none',
       sendHeaders: true,
       headerParameters: {
         parameters: [
           { name: 'Accept', value: 'application/json' }
         ]
-      }
+      },
+      options: {}
     },
     output: [{ json: { id: 1, name: 'Alice' } }]
   }
 })
 
-// POST request with JSON body
+// POST request with JSON body (most common pattern in real workflows)
 const postNode = node({
   type: 'n8n-nodes-base.httpRequest', version: 4.4,
   config: {
@@ -811,13 +826,50 @@ const postNode = node({
       url: 'https://api.example.com/users',
       method: 'POST',
       sendBody: true,
+      specifyBody: 'json',
+      jsonBody: '={{ JSON.stringify({ name: $json.name, email: $json.email }) }}',
+      options: {}
+    }
+  }
+})
+
+// POST with form body parameters
+const formPostNode = node({
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
+  config: {
+    name: 'Submit Form',
+    parameters: {
+      url: 'https://api.example.com/form',
+      method: 'POST',
+      sendBody: true,
+      contentType: 'multipart-form-data',
       bodyParameters: {
         parameters: [
           { name: 'name', value: '={{ $json.name }}' },
           { name: 'email', value: '={{ $json.email }}' }
         ]
-      }
+      },
+      options: {}
     }
+  }
+})
+
+// GET with authentication
+const authGetNode = node({
+  type: 'n8n-nodes-base.httpRequest', version: 4.4,
+  config: {
+    name: 'Authenticated Request',
+    parameters: {
+      url: 'https://api.example.com/data',
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendHeaders: true,
+      headerParameters: {
+        parameters: [{ name: 'Accept', value: 'application/json' }]
+      },
+      options: {}
+    },
+    credentials: { httpHeaderAuth: { name: 'API Key', id: 'cred-123' } }
   }
 })
 ```
@@ -831,16 +883,72 @@ const ifNode = node({
     name: 'Check Status',
     parameters: {
       conditions: {
-        options: { caseSensitive: true, leftValue: '' },
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 },
+        combinator: 'and',  // 'and' | 'or'
         conditions: [{
+          id: 'status-check',
           leftValue: '={{ $json.status }}',
           rightValue: 'active',
           operator: { type: 'string', operation: 'equals' }
         }]
-      }
+      },
+      options: {}
+    }
+  }
+})
+
+// Multiple conditions with OR
+const multiConditionIf = node({
+  type: 'n8n-nodes-base.if', version: 2.3,
+  config: {
+    name: 'Check Multiple',
+    parameters: {
+      conditions: {
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'loose', version: 2 },
+        combinator: 'or',
+        conditions: [
+          { id: 'check-1', leftValue: '={{ $json.role }}', rightValue: 'admin', operator: { type: 'string', operation: 'equals' } },
+          { id: 'check-2', leftValue: '={{ $json.role }}', rightValue: 'superadmin', operator: { type: 'string', operation: 'equals' } }
+        ]
+      },
+      options: {}
     }
   }
 })
 ```
 
+**Condition structure:** Each condition in `conditions.conditions[]` must have: `id` (unique string), `leftValue` (expression), `rightValue` (literal or expression), and `operator: { type, operation }`. The `conditions.options` block must include `version: 2`.
+
 **Common operators:** `equals`, `notEquals`, `contains`, `notContains`, `startsWith`, `endsWith`, `gt`, `gte`, `lt`, `lte`, `regex`, `isEmpty`, `isNotEmpty`.
+
+**Operator types:** `string`, `number`, `boolean`, `dateTime`, `array`, `object`.
+
+### Filter Node
+
+The Filter node uses the same condition structure as the IF node, but drops items that don't match instead of routing them. The operator object includes an additional `name` field.
+
+```typescript
+const filterNode = node({
+  type: 'n8n-nodes-base.filter', version: 2.3,
+  config: {
+    name: 'Only Active Users',
+    parameters: {
+      conditions: {
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'strict', version: 2 },
+        combinator: 'and',
+        conditions: [
+          {
+            id: 'active-check',
+            leftValue: '={{ $json.status }}',
+            rightValue: 'active',
+            operator: { name: 'filter.operator.equals', type: 'string', operation: 'equals' }
+          }
+        ]
+      },
+      options: {}
+    }
+  }
+})
+```
+
+**Key difference from IF node:** Filter operators include a `name` field with the format `"filter.operator.<operation>"` (e.g., `"filter.operator.equals"`, `"filter.operator.contains"`, `"filter.operator.gt"`). The `typeValidation` defaults to `'strict'` (vs `'loose'` for IF nodes).

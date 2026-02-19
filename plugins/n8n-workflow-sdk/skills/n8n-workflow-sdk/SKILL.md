@@ -295,7 +295,10 @@ import { workflow, node, trigger, languageModel, tool, memory, fromAi } from '@n
 const model = languageModel({
   type: '@n8n/n8n-nodes-langchain.lmChatOpenAi', version: 1.3,
   config: {
-    parameters: { model: 'gpt-4o' },
+    parameters: {
+      model: { __rl: true, mode: 'list', value: 'gpt-4o-mini', cachedResultName: 'gpt-4o-mini' },
+      options: {}
+    },
     credentials: { openAiApi: { name: 'OpenAI', id: 'cred-123' } }
   }
 })
@@ -314,6 +317,11 @@ const agent = node({
   type: '@n8n/n8n-nodes-langchain.agent', version: 3.1,
   config: {
     name: 'AI Agent',
+    parameters: {
+      promptType: 'define',
+      text: '={{ $json.chatInput }}',
+      options: { systemMessage: 'You are a helpful AI assistant.' }
+    },
     subnodes: { model, tools: [emailTool], memory: memoryNode }
   }
 })
@@ -322,6 +330,8 @@ const wf = workflow('ai-workflow', 'AI Agent Workflow')
   .add(trigger({ type: 'n8n-nodes-base.manualTrigger', version: 1, config: {} }))
   .to(agent)
 ```
+
+**⚠️ Model IDs in examples are illustrative and will become outdated.** Always choose the most appropriate **current** model for the user's use case — do NOT copy model IDs like `gpt-4o-mini` from these examples. Check the provider's latest model offerings.
 
 ## SDK API Quick Reference
 
@@ -561,3 +571,4 @@ This skill is for **building and manipulating n8n workflows programmatically** u
 11. **Set `output` on nodes to enable pin data generation** — This is how you create test fixtures. Without declared outputs, `generatePinData()` has nothing to convert.
 12. **Use `sticky()` for workflow documentation** — Auto-positions around given nodes, making it easy to annotate sections of complex workflows for other developers.
 13. **NEVER generate empty Set nodes** — A Set node with `parameters: { options: {} }` is broken and does nothing. Every Set node v3.4 MUST have `mode: 'manual'` with `assignments.assignments` containing at least one entry, OR `mode: 'raw'` with a `jsonOutput` string. Use `type: 'string'`/`'number'`/`'boolean'` and a single `value` field — NOT the old `stringValue`/`numberValue` format. If you don't know what fields to set, ask the user.
+14. **Use current AI models, not example model IDs** — Model IDs in code examples (e.g., `gpt-4o-mini`, `claude-sonnet-4-20250514`) are illustrative and become outdated. Always select the most appropriate current model for the user's task. Check the provider's latest offerings rather than copying from examples.
